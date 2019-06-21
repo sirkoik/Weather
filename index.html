@@ -1,53 +1,29 @@
-<style>
-	ul {
-		list-style-type: none;
-		list-style-position: inside;
-		padding-left: 0;
-		margin-left: 0;
-	}
-</style>
+<html>
+    <head>
+        <style>
+            ul {
+                list-style-type: none;
+                list-style-position: inside;
+                padding-left: 0;
+                margin-left: 0;
+            }
+        </style>
 
-<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
-<script>
-$(function() {
-	$.ajax({
-		url: '',
-		jsonp: 'callback',
-		success: function(data) {
-			console.log(data);
-			
-			tc = data.main.temp - 273.15;
-			tf = tc * 1.8 + 32;
-			$('#name').html(data.name);
-			$('#temp').html(Math.round(tc * 10) / 10 + "&deg; C / " + Math.round(tf * 10) / 10 + "&deg; F");
-			
-			wk = data.wind.speed;
-			wm = Math.round(10 * wk / 1.6) / 10;
-			r = data.wind.deg;
-			$('#wind').html(data.wind.speed + ' Km/h / ' + wm + ' MPH <div style="display:inline-block;width:10px;transform:rotate(' + r + 'deg)">^</div>');
-			
-			$('#clouds').html(data.clouds.all + '% clouds');
-			
-			var rain = data.rain? data.rain : 'No rain';
-			$('#rain').html(rain);
+        <script src="scripts/Weather.js"></script>
 
-			var snow = data.snow? data.snow : 'No snow';
-			$('#snow').html(snow);
-		}
-	});
-});
-</script>
+        <title>Current Weather</title>
+    </head>
+    
+    <body>
+        <ul>
+        <li class="weather-name">
+        <li class="weather-temp">
+        <li class="weather-wind">
+        <li class="weather-clouds">
+        <li class="weather-rain">
+        <li class="weather-snow">
+        </ul>
 
-<title>Current Weather</title>
-<body>
-<ul>
-<li id="name">
-<li id="temp">
-<li id="wind">
-<li id="clouds">
-<li id="rain">
-<li id="snow">
-</ul>
-
-<a href="/">Home</a>
-</body>
+        <a href="/">Home</a>
+    </body>
+</html>
