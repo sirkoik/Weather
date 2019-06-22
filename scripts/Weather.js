@@ -41,7 +41,7 @@ function Weather() {
         });
     }
     
-    this.getURL = () => 'http://api.openweathermap.org/data/2.5/weather?lat=' + pos.lat + '&lon=' + pos.lon + '&APPID=' + WEATHERKEY;
+    this.getURL = () => 'https://api.openweathermap.org/data/2.5/weather?lat=' + pos.lat + '&lon=' + pos.lon + '&APPID=' + WEATHERKEY;
     
     this.getData = () => {
         var xhr = new XMLHttpRequest();
