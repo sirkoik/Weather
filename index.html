@@ -1,28 +1,47 @@
+<!DOCTYPE HTML>
 <html>
     <head>
+        <meta charset="UTF-8">
         <style>
+            * {
+                font-family: monospace;
+                font-size: 5vh;
+            }
+            
             ul {
                 list-style-type: none;
                 list-style-position: inside;
                 padding-left: 0;
                 margin-left: 0;
             }
+            
+            .wind-direction {
+                display: inline-block;
+                width: 10px;
+            }
+            
+            .hide {
+                display: none;
+            }
         </style>
 
         <script src="scripts/Weather.js"></script>
 
-        <title>Current Weather</title>
+        <title>Weather</title>
     </head>
     
     <body>
-        <ul>
-        <li class="weather-name">
-        <li class="weather-temp">
-        <li class="weather-wind">
-        <li class="weather-clouds">
-        <li class="weather-rain">
-        <li class="weather-snow">
-        </ul>
+        <h3>Weather</h3>
+        
+            <p><span class="weather-name"></span></p>
+            <p>Temp <span class="weather-temp"></span></p>
+            <div>Wind <span class="weather-wind"></span>&nbsp;<div class="wind-direction"></div></div>
+            <p>Clouds <span class="weather-clouds"></span></p>
+            <p class="weather-rain-container hide">Rain <span class="weather-rain"></span></p>
+            <p class="weather-snow-cotnainer hide">Snow <span class="weather-snow"></span></p>
+                
+            <p>Humidity <span class="weather-humidity"></span></p>
+            <p>Pressure <span class="weather-pressure"></span></p>
 
         <a href="/">Home</a>
     </body>
