@@ -1,56 +1,66 @@
-const VERSION = '0.0.3a';
+const VERSION = '0.0.4a';
 const WEATHERKEY = '6b80ba80e350de60e41ab0ccf87ad068';
+const LATDEFAULT = 51.5;                                    // london defaults
+const LONDEFAULT = 0.128;
 
-function Weather(pos) {
-    var _self = this;
-    
-    var pos = pos;
+function Weather() {    
+    var pos = {lat: LATDEFAULT, lon: LONDEFAULT};
     
     // Weather.getCoords: get geolocated coordinates if none manually provided.
-    this.getCoords = function() {
+    this.getCoords = () => {
         
-        var coordsPromise = new Promise((resolve, reject) => {
+        // TODO try to chain these promises.
+        coordsPromise = new Promise((resolve, reject) => {
             navigator.geolocation.getCurrentPosition(
-                function(position) {
-                    pos.lat = position.coords.latitude;
-                    pos.lon = position.coords.longitude;
-                },
-                function(positionError) {
-                    alert(positionError.message);
-                },
+                position => resolve(position),
+                positionError => reject(positionError),
                 {
                     enableHighAccuracy: true
                 }
             );            
         });
         
-        coordsPromise.then(function(value) {
-            alert(pos.lat + ' ' + pos.lon);
+        // success: got the coordinates.
+        coordsPromise.then(position => {
+            pos.lat = position.coords.latitude;
+            pos.lon = position.coords.longitude;
+            
+            this.getData();
         });
-
+        
+        // fail: couldn't get the coordinates for some reason.
+        coordsPromise.catch(positionError => {
+            //alert(positionError.message);
+            console.log(positionError.message);
+            document.querySelector('.message').textContent = ' (unable to read position data)';
+            
+            pos.lat = LATDEFAULT;
+            pos.lon = LONDEFAULT;
+            
+            this.getData();
+        });
     }
     
-    this.getURL = function() {
-        return 'http://api.openweathermap.org/data/2.5/weather?lat='+pos.lat+'&lon='+pos.lon+'&APPID='+WEATHERKEY;
-    }
+    this.getURL = () => 'http://api.openweathermap.org/data/2.5/weather?lat=' + pos.lat + '&lon=' + pos.lon + '&APPID=' + WEATHERKEY;
     
-    this.getData = function() {
+    this.getData = () => {
         var xhr = new XMLHttpRequest();
-        xhr.onload = function() {
-            var data = this.response;
-            _self.populateFields(data);
+        xhr.onload = (data) => {
+            var data = xhr.response;
+            this.populateFields(data);
         }
         xhr.open('GET', this.getURL(), true);
         xhr.send();
     }
     
-    this.populateFields = function(data) {
+    this.populateFields = data => {
         data = JSON.parse(data);
         
         console.log(data);
         
         var name = {'name': data.name};
         var temps = this.getTemps(data);
+        var pressure= this.getPressure(data);
         var wind = this.getWind(data);
         var clouds = this.getClouds(data);
         var visibility = this.getVisibility(data);
@@ -58,11 +68,11 @@ function Weather(pos) {
         var fields = {
             'name': data.name, 
             'humidity': data.main.humidity,
-            'pressure': data.main.pressure,
             'visibility': visibility,
             ...temps, 
+            ...pressure,
             ...wind, 
-            ...clouds            
+            ...clouds
         };
 
         console.log(fields);
@@ -71,13 +81,9 @@ function Weather(pos) {
             //document.querySelector('.weather-'+field).textContent = fields[field];
         }
         
-        /*var node = document.createElement('div');
-        var textNode = document.createTextNode(fields);
-        node.appendChild(textNode);
-        
-        document.body.appendChild(node);*/
-        
         document.title = fields.name + ' ' + fields.c + 'C / ' + fields.f + 'F';
+        
+        document.querySelector('.version').textContent = VERSION;
         
         document.querySelector('.weather-name').textContent = fields.name;
         document.querySelector('.weather-temp').textContent = fields.c + 'C / ' + fields.f + 'F';
@@ -95,12 +101,13 @@ function Weather(pos) {
 
         }
         document.querySelector('.weather-humidity').textContent = fields.humidity + '%';
-        document.querySelector('.weather-pressure').textContent = fields.pressure + ' hPa';
+        document.querySelector('.weather-pressure').textContent = 
+            fields.phPa + ' hPa/mbar / ' + fields.pPsi + ' psi / ' + fields.pAtm + ' atm / ' + fields.pMmhg + ' mm Hg'; 
         
         document.querySelector('.weather-visibility').textContent = fields.visibility.km + 'km / ' + fields.visibility.mi + ' mi';
     }
     
-    this.parseObj = function(obj) {
+    this.parseObj = obj => {
         var arr = [];
         for (el in obj) {
             arr.push(el + ' ' + obj[el]);
@@ -108,7 +115,7 @@ function Weather(pos) {
         return arr.join('<br/>');
     }
     
-    this.getTemps = function(data) {
+    this.getTemps = data => {
         var tc = data.main.temp - 273.15;
         var tf = tc * 1.8 + 32;
         
@@ -118,7 +125,16 @@ function Weather(pos) {
         return {'c': tc, 'f': tf};
     }
     
-    this.getWind = function(data) {
+    this.getPressure = data => {
+        var phPa = data.main.pressure;
+        var pPsi = Math.round(phPa * 0.0145037738 * 10) / 10;
+        var pAtm = Math.round(phPa * 0.00098692326671601 * 10) / 10;
+        var pMmhg = Math.round(phPa * 0.75006157584566 * 10) / 10;
+        
+        return {'phPa': phPa, 'pPsi': pPsi, 'pAtm': pAtm, 'pMmhg': pMmhg};
+    }
+    
+    this.getWind = data => {
         var wk = data.wind.speed;
         var wm = Math.round(10 * wk / 1.6) / 10;
 
@@ -129,22 +145,18 @@ function Weather(pos) {
         return {'kph': wk, 'mph': wm, 'r': r, 'rdir': rdir};
     }
     
-    this.getClouds = function(data) {
+    this.getClouds = data => {
         return {'clouds': data.clouds.all};
     }
     
-    this.getVisibility = function(data) {
+    this.getVisibility = data => {
         var k = Math.round(10 * data.visibility / 1000) / 10;
         var mi = Math.round(10 * data.visibility / 1600) / 10;
         return {'km': k, 'mi': mi};
     }
 }
 
-window.onload = function() {
-    var lat = 40.1;
-    var lon = -83.11;
-    
-    var weather = new Weather({lat: lat, lon: lon});
-    //weather.getCoords();
-    weather.getData();
+window.onload = () => {
+    var weather = new Weather();
+    weather.getCoords();
 }

@@ -23,6 +23,15 @@
             .hide {
                 display: none;
             }
+            
+            .footer {
+                position: fixed;
+                bottom: 0;
+                right: 0;
+                text-align: right;
+                
+                padding: 0.5em;
+            }
         </style>
 
         <script src="scripts/Weather.js"></script>
@@ -31,9 +40,9 @@
     </head>
     
     <body>
-        <h3>Weather</h3>
+        <h3>Weather v<span class="version"></span></h3>
         
-            <p><span class="weather-name"></span></p>
+            <p><span class="weather-name">Loading...</span><span class="message"></span></p>
             <p>Temp <span class="weather-temp"></span></p>
             <div>Wind <span class="weather-wind"></span>&nbsp;<div class="wind-direction"></div></div>
             <p>Clouds <span class="weather-clouds"></span></p>
@@ -44,6 +53,6 @@
             <p>Pressure <span class="weather-pressure"></span></p>
             <p>Visibility <span class="weather-visibility"></span></p>
 
-        <a href="/">Home</a>
+        <div class="footer"><a href="/">Home</a></div>
     </body>
 </html>
