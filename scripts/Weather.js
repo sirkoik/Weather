@@ -1,4 +1,4 @@
-const VERSION = '0.0.4a';
+const VERSION = '0.0.5a';
 const WEATHERKEY = '6b80ba80e350de60e41ab0ccf87ad068';
 const LATDEFAULT = 51.5;                                    // london defaults
 const LONDEFAULT = 0.128;
@@ -48,6 +48,7 @@ function Weather() {
         xhr.onload = (data) => {
             var data = xhr.response;
             this.populateFields(data);
+            this.refresh();
         }
         xhr.open('GET', this.getURL(), true);
         xhr.send();
@@ -64,15 +65,17 @@ function Weather() {
         var wind = this.getWind(data);
         var clouds = this.getClouds(data);
         var visibility = this.getVisibility(data);
+        var updated = this.getUpdated(data);
         
         var fields = {
             'name': data.name, 
             'humidity': data.main.humidity,
             'visibility': visibility,
+            'updated': updated,
             ...temps, 
             ...pressure,
             ...wind, 
-            ...clouds
+            ...clouds,
         };
 
         console.log(fields);
@@ -87,6 +90,8 @@ function Weather() {
         
         document.querySelector('.weather-name').textContent = fields.name;
         document.querySelector('.weather-temp').textContent = fields.c + 'C / ' + fields.f + 'F';
+        document.querySelector('.weather-temp').style.color = 'hsl('+fields.tcolor+', 100%, 50%)'; 
+        
         document.querySelector('.weather-wind').textContent = fields.kph + ' km/h / ' + fields.mph + ' mph ' + fields.rdir;
         document.querySelector('.wind-direction').style.transform = 'rotate(' + fields.r + 'deg)';
         document.querySelector('.wind-direction').innerHTML = '&uarr;';
@@ -105,6 +110,9 @@ function Weather() {
             fields.phPa + ' hPa/mbar / ' + fields.pPsi + ' psi / ' + fields.pAtm + ' atm / ' + fields.pMmhg + ' mm Hg'; 
         
         document.querySelector('.weather-visibility').textContent = fields.visibility.km + 'km / ' + fields.visibility.mi + ' mi';
+        
+        // bugged
+       // document.querySelector('.weather-lastupdated').textContent = fields.updated;
     }
     
     this.parseObj = obj => {
@@ -122,7 +130,11 @@ function Weather() {
         tc = Math.round(tc * 10) / 10;
         tf = Math.round(tf * 10) / 10;
         
-        return {'c': tc, 'f': tf};
+        var color = 160 - tf * 2.2 + 32;
+        if (color < 0) color = 0;
+        if (color > 160) color = 160;
+        
+        return {'c': tc, 'f': tf, 'tcolor': color};
     }
     
     this.getPressure = data => {
@@ -153,6 +165,17 @@ function Weather() {
         var k = Math.round(10 * data.visibility / 1000) / 10;
         var mi = Math.round(10 * data.visibility / 1600) / 10;
         return {'km': k, 'mi': mi};
+    }
+    
+    // bugged
+    this.getUpdated = data => {
+        return new Date(data.dt);
+    }
+    
+    this.refresh = () => {
+        setTimeout(() => {
+            location.reload();
+        }, 30000);
     }
 }
 
