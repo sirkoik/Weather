@@ -40,9 +40,17 @@
     </head>
     
     <body>
-        <h3>Weather in <span class="weather-name">Loading...</span> <span class="message"></span></h3>
+        <h3>Weather in <span class="weather-name">(loading place...)</span> (<span class="weather-last-updated">...</span>) <span class="message"></span></h3>
         
-        <p>Temp <span class="weather-temp"></span></p>
+        Temperature
+        <div>
+            <div class="weather-temp-max"></div>
+            <div class="weather-temp-avg"></div>
+            <div class="weather-temp-min"></div>
+        </div>
+        
+        <br/>
+        
         <div>Wind <span class="weather-wind"></span>&nbsp;<div class="wind-direction"></div></div>
         <p>Clouds <span class="weather-clouds"></span></p>
         <p class="weather-rain-container hide">Rain <span class="weather-rain"></span></p>
@@ -51,8 +59,10 @@
         <p>Humidity <span class="weather-humidity"></span></p>
         <p>Pressure <span class="weather-pressure"></span></p>
         <p>Visibility <span class="weather-visibility"></span></p>
-<!--            <p>Last updated <span class="weather-last-updated"></span></p>-->
+        <p class="weather-sun"></p>
 
+        <p>Data courtesy <a href="https://www.openweathermap.org" target="_blank">OpenWeatherMap</a></p>
+        
         <div class="footer">v<span class="version"></span> <a href="/">Home</a></div>
     </body>
 </html>
