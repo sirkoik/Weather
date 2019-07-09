@@ -1,4 +1,4 @@
-const VERSION = '0.0.6a';
+const VERSION = '0.0.7a';
 const WEATHERKEY = '6b80ba80e350de60e41ab0ccf87ad068';
 const LATDEFAULT = 51.5;                                    // london defaults
 const LONDEFAULT = 0.128;
@@ -48,7 +48,7 @@ function Weather() {
         xhr.onload = (data) => {
             var data = xhr.response;
             this.populateFields(data);
-            this.checkNight();
+            this.checkNight(data);
             this.refresh();
         }
         xhr.open('GET', this.getURL(), true);
@@ -113,7 +113,7 @@ function Weather() {
         
         document.querySelector('.weather-visibility').textContent = fields.visibility.km + 'km / ' + fields.visibility.mi + ' mi';
         
-        document.querySelector('.weather-sun').innerHTML = 'Sunrise ' + fields.sun.sunrise + '<br/>Sunset &nbsp;' + fields.sun.sunset;
+        document.querySelector('.weather-sun').innerHTML = 'Sunrise ' + fields.sun.sunrise + '<br/>Sunset &nbsp;' + fields.sun.sunset + '<br/>Daylight ' + fields.sun.daylightHrs + ' hours / ' + fields.sun.daylight + '%';
 
         document.querySelector('.weather-last-updated').textContent = fields.updated;
     }
@@ -188,9 +188,17 @@ function Weather() {
     this.getSun = data => {
         var sun = data.sys;
         
+        var dayPct = (sun.sunset - sun.sunrise) / 86400;
+        
+        var daylight = Math.round(1000 * dayPct) / 10;
+        var daylightHrs = Math.round(10 * 24 * dayPct) / 10;
+        
+        
         return {
             sunrise: this.formatDate(sun.sunrise, true), 
-            sunset: this.formatDate(sun.sunset, true)
+            sunset: this.formatDate(sun.sunset, true),
+            daylight: daylight,
+            daylightHrs: daylightHrs
         };
     }
     
@@ -200,8 +208,9 @@ function Weather() {
     
     // Weather.checkNight: check if nighttime and if so, invert colors
     this.checkNight = data => {
+        console.log(data);
         var curDate = new Date().getTime();
-        if (curDate > data.sys.sunset || curDate < data.sys.sunrise) {
+        if (curDate > data.sunset || curDate < data.sunrise) {
             document.querySelector('*').style.color = '#fff';
             document.body.style.backgroundColor = '#000';
         }
