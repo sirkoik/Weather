@@ -1,5 +1,8 @@
 # Weather
 
+## v0.0.11
+Added "Feels like" temperature.
+
 ## v0.0.10
 Added UV index (experimental).
 Some code refactoring needed.

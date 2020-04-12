@@ -1,4 +1,4 @@
-const VERSION = '0.0.10';
+const VERSION = '0.0.11';
 const WEATHERKEY = '6b80ba80e350de60e41ab0ccf87ad068';
 const LATDEFAULT = 51.5;                                    // london defaults
 const LONDEFAULT = 0.128;
@@ -74,6 +74,23 @@ function Weather() {
             data = xhr.response;
             data = JSON.parse(data);
             
+            // "Feels like" temperature
+            let feelsTemp = data.current.feels_like;
+            
+            var tc = feelsTemp - 273.15;
+            var tf = tc * 1.8 + 32;
+
+            tc = Math.round(tc * 10) / 10;
+            tf = Math.round(tf * 10) / 10;
+
+            var color = 160 - tf * 2.2 + 32;
+            if (color < 0) color = 0;
+            if (color > 160) color = 160;
+            
+            document.querySelector('.weather-temp-feels-like').textContent = tc + 'C / ' + tf + 'F';
+            document.querySelector('.weather-temp-feels-like').style.color = 'hsl(' + color + ', 100%, 50%)';
+            
+            // UVI
             let uvi = data.current.uvi;
             let uvRatings = ['Low', 'Moderate', 'High', 'Very High', 'Extreme'];
             let uvColors = ['#00ff00', '#ffff00', '#ff9900', '#ff0099', '#90c0f0'];
@@ -97,7 +114,7 @@ function Weather() {
     this.populateFields = data => {
         data = JSON.parse(data);
         
-        console.log(data);
+        //console.log(data);
                 
         var fields = {
             'name':       data.name, 
