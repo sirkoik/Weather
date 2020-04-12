@@ -292,7 +292,7 @@ function Weather() {
             document.querySelector('*').style.color = '#fff';
             document.body.style.backgroundColor = '#000';
         } else {
-            alert(curDate + ' ' +  data.sys.sunrise*1000);
+            //alert(curDate + ' ' +  data.sys.sunrise*1000);
         }
     }
     
