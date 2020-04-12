@@ -2,6 +2,7 @@
 
 ## v0.0.11
 Added "Feels like" temperature.
+Added wind gust (will show if data is available).
 
 ## v0.0.10
 Added UV index (experimental).

@@ -73,7 +73,7 @@ function Weather() {
         xhr.onload = (data) => {
             data = xhr.response;
             data = JSON.parse(data);
-            
+            //console.log(data);
             // "Feels like" temperature
             let feelsTemp = data.current.feels_like;
             
@@ -89,6 +89,13 @@ function Weather() {
             
             document.querySelector('.weather-temp-feels-like').textContent = tc + 'C / ' + tf + 'F';
             document.querySelector('.weather-temp-feels-like').style.color = 'hsl(' + color + ', 100%, 50%)';
+            
+            // Wind gust
+            if (data.current.wind_gust) {
+                document.querySelector('.weather-wind-gust').style.display = 'block';
+                
+                document.querySelector('.weather-wind-gust').textContent = data.current.wind_gust;
+            }
             
             // UVI
             let uvi = data.current.uvi;
