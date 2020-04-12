@@ -24,6 +24,13 @@ ul {
 }
 
 .header {
+    z-index: 1;
+    
+    position: sticky;
+    top: 0;
+    left: 0;
+    right: 0;
+    
     color: #000;
     
     display: flex;
@@ -31,11 +38,6 @@ ul {
     justify-content: space-between;
     
     margin: 0;
-    
-    position: sticky;
-    top: 0;
-    left: 0;
-    right: 0;
     
     padding: 0.2em;
 }

@@ -1,10 +1,18 @@
-const VERSION = '0.0.8';
+const VERSION = '0.0.10';
 const WEATHERKEY = '6b80ba80e350de60e41ab0ccf87ad068';
 const LATDEFAULT = 51.5;                                    // london defaults
 const LONDEFAULT = 0.128;
+const REFRESHDELAY = 60000;
+const DATAREFRESH = 300000;
 
 function Weather() {    
     var pos = {lat: LATDEFAULT, lon: LONDEFAULT};
+    
+    var refreshTimeout = -1;
+    
+    document.querySelector('.refresh').textContent = REFRESHDELAY / 1000;
+    document.querySelector('.data-refresh').textContent = DATAREFRESH / 1000 / 60;
+    
     
     // Weather.getCoords: get geolocated coordinates if none manually provided.
     this.getCoords = () => {
@@ -26,6 +34,7 @@ function Weather() {
             pos.lon = position.coords.longitude;
             
             this.getData();
+            this.getDataOneCall();
         });
         
         // fail: couldn't get the coordinates for some reason.
@@ -38,10 +47,11 @@ function Weather() {
             pos.lon = LONDEFAULT;
             
             this.getData();
+            this.getDataOneCall();
         });
     }
     
-    this.getURL = () => 'https://api.openweathermap.org/data/2.5/weather?lat=' + pos.lat + '&lon=' + pos.lon + '&APPID=' + WEATHERKEY;
+    this.getURL = (type) => 'https://api.openweathermap.org/data/2.5/'+type+'?lat=' + pos.lat + '&lon=' + pos.lon + '&APPID=' + WEATHERKEY;
     
     this.getData = () => {
         var xhr = new XMLHttpRequest();
@@ -49,11 +59,40 @@ function Weather() {
             var data = xhr.response;
             this.populateFields(data);
             this.checkNight(data);
-            this.refresh();
+            this.delayedRefresh();
         }
-        xhr.open('GET', this.getURL(), true);
+        xhr.open('GET', this.getURL('weather'), true);
         xhr.send();
     }
+    
+    // getDataOneCall: Uses OpenWeatherMap's "one call" API.
+    // currently using to get UV index data
+    // I need to refactor this so it's all part of one Promise.
+    this.getDataOneCall = () => {
+        let xhr = new XMLHttpRequest();
+        xhr.onload = (data) => {
+            data = xhr.response;
+            data = JSON.parse(data);
+            
+            let uvi = data.current.uvi;
+            let uvRatings = ['Low', 'Moderate', 'High', 'Very High', 'Extreme'];
+            let uvColors = ['#00ff00', '#ffff00', '#ff9900', '#ff0099', '#90c0f0'];
+            let uviArrIndex = 4;
+            if (uvi < 11) uviArrIndex = 3;
+            if (uvi < 8) uviArrIndex = 2;
+            if (uvi < 6) uviArrIndex = 1;
+            if (uvi < 3) uviArrIndex = 0;
+            
+            document.querySelector('.weather-uvi').innerHTML = data.current.uvi + ' (' + uvRatings[uviArrIndex] + ')';
+            document.querySelector('.weather-uvi').style.color = uvColors[uviArrIndex];
+            
+            document.querySelector('.weather-uvi-link').href = 'https://enviro.epa.gov/enviro/uv_search_v2?minx='+pos.lon+'&miny='+pos.lat+'&maxx='+pos.lon+'&maxy='+pos.lat;
+        }
+        xhr.open('GET', this.getURL('onecall'), true);
+        xhr.send();
+    }    
+    
+    
     
     this.populateFields = data => {
         data = JSON.parse(data);
@@ -72,7 +111,7 @@ function Weather() {
             'sun':        this.getSun(data)
         };
         
-        console.log(fields);
+        //console.log(fields);
                 
         document.title = fields.name + ' ' + fields.temps.avg.c + 'C / ' + fields.temps.avg.f + 'F';
         
@@ -115,7 +154,7 @@ function Weather() {
         
         document.querySelector('.weather-visibility').textContent = fields.visibility.km + 'km / ' + fields.visibility.mi + ' mi';
         
-        document.querySelector('.weather-sun').innerHTML = 'Sunrise ' + fields.sun.sunrise + '<br/>Sunset &nbsp;' + fields.sun.sunset + '<br/>Daylight ' + fields.sun.daylightHrs + ' hours / ' + fields.sun.daylight + '%';
+        document.querySelector('.weather-sun').innerHTML = 'Sunrise ' + fields.sun.sunrise + '<br/>Sunset &nbsp;' + fields.sun.sunset + '<br/>Daylight ' + fields.sun.daylightHrs + ' hours / ' + fields.sun.daylight + '%<br>Night '+ fields.sun.nightHrs + ' hours / ' + fields.sun.night + '%';
 
         document.querySelector('.weather-last-updated').textContent = fields.updated;
     }
@@ -195,6 +234,8 @@ function Weather() {
         var daylight = Math.round(1000 * dayPct) / 10;
         var daylightHrs = Math.round(10 * 24 * dayPct) / 10;
         
+        var night = 100 - daylight;
+        var nightHrs = Math.round(10 * 24 * (1-dayPct)) / 10;
         
         return {
             sunrise: this.formatDate(sun.sunrise, true), 
@@ -202,7 +243,9 @@ function Weather() {
             sunset: this.formatDate(sun.sunset, true),
             sunsetStamp: sun.sunset,
             daylight: daylight,
-            daylightHrs: daylightHrs
+            daylightHrs: daylightHrs,
+            night: night,
+            nightHrs: nightHrs
         };
     }
     
@@ -247,10 +290,12 @@ function Weather() {
         return date.toLocaleDateString(date, options).replace(',', '');
     }
     
-    this.refresh = () => {
-        setTimeout(() => {
-            location.reload();
-        }, 60000);
+    // delayedRefresh: Refreshes data after a delay.
+    this.delayedRefresh = () => {
+        refreshTimeout = setTimeout(() => {
+            //this.getData();
+            this.getCoords();
+        }, REFRESHDELAY);
     }
 }
 

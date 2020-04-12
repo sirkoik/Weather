@@ -1,5 +1,13 @@
 # Weather
 
+## v0.0.10
+Added UV index (experimental).
+Some code refactoring needed.
+
+## v0.0.9
+Added night hours / %
+Now refreshes without reloading page (refreshes coordinates as well).
+
 ## v0.0.8
 Fixed day/night cycle, improved graphics
 Title bar now colored with temperature.
