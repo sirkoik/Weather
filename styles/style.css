@@ -1,0 +1,63 @@
+body {
+    margin: 0;
+}
+
+* {
+    font-family: monospace;
+    font-size: 5vh;
+}
+
+ul {
+    list-style-type: none;
+    list-style-position: inside;
+    padding-left: 0;
+    margin-left: 0;
+}
+
+.wind-direction {
+    display: inline-block;
+    width: 10px;
+}
+
+.hide {
+    display: none;
+}
+
+.header {
+    color: #000;
+    
+    display: flex;
+    background: green;
+    justify-content: space-between;
+    
+    margin: 0;
+    
+    position: sticky;
+    top: 0;
+    left: 0;
+    right: 0;
+    
+    padding: 0.2em;
+}
+
+.content {
+    margin: 0.2em;
+}
+
+.footer {
+    margin: 0.2em;
+    
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.day-color {
+    color: #000;
+    background: #fff;
+}
+
+.night-color {
+    color: #ccc;
+    background: #000;
+}

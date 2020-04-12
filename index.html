@@ -2,67 +2,47 @@
 <html>
     <head>
         <meta charset="UTF-8">
-        <style>
-            * {
-                font-family: monospace;
-                font-size: 5vh;
-            }
-            
-            ul {
-                list-style-type: none;
-                list-style-position: inside;
-                padding-left: 0;
-                margin-left: 0;
-            }
-            
-            .wind-direction {
-                display: inline-block;
-                width: 10px;
-            }
-            
-            .hide {
-                display: none;
-            }
-            
-            .footer {
-                position: fixed;
-                bottom: 0;
-                right: 0;
-                text-align: right;
-                
-                padding: 0.5em;
-            }
-        </style>
-
+        <link rel="stylesheet" type="text/css" href="styles/style.css">
         <script src="scripts/Weather.js"></script>
 
         <title>Weather</title>
     </head>
     
     <body>
-        <h3>Weather in <span class="weather-name">(loading place...)</span> (<span class="weather-last-updated">...</span>) <span class="message"></span></h3>
-        
-        Temperature
-        <div>
-            <div class="weather-temp-max"></div>
-            <div class="weather-temp-avg"></div>
-            <div class="weather-temp-min"></div>
+        <div class="header">
+              <div>
+                  <span class="weather-name">(loading place...)</span>
+              </div>
+            <div><span class="weather-last-updated">...</span></div>
+            <div><a href="/">Home</a></div>
         </div>
         
-        <br/>
-        
-        <div>Wind <span class="weather-wind"></span>&nbsp;<div class="wind-direction"></div></div>
-        <p>Clouds <span class="weather-clouds"></span></p>
-        <p class="weather-rain-container hide">Rain <span class="weather-rain"></span></p>
-        <p class="weather-snow-cotnainer hide">Snow <span class="weather-snow"></span></p>
+        <div class="content">
+            <h3><span class="message"></span></h3>
 
-        <p>Humidity <span class="weather-humidity"></span></p>
-        <p>Pressure <span class="weather-pressure"></span></p>
-        <p>Visibility <span class="weather-visibility"></span></p>
-        <p class="weather-sun"></p>
+            Temperature
+            <div>
+                <div class="weather-temp-max"></div>
+                <div class="weather-temp-avg"></div>
+                <div class="weather-temp-min"></div>
+            </div>
 
-        <p>Data courtesy <a href="https://www.openweathermap.org" target="_blank">OpenWeatherMap</a></p>
+            <br/>
+
+            <div>Wind <span class="weather-wind"></span>&nbsp;<div class="wind-direction"></div></div>
+            <p>Clouds <span class="weather-clouds"></span></p>
+            <p class="weather-rain-container hide">Rain <span class="weather-rain"></span></p>
+            <p class="weather-snow-cotnainer hide">Snow <span class="weather-snow"></span></p>
+
+            <p>Humidity <span class="weather-humidity"></span></p>
+            <p>Pressure <span class="weather-pressure"></span></p>
+            <p>Visibility <span class="weather-visibility"></span></p>
+            <p class="weather-sun"></p>
+        </div>
         
-        <div class="footer">v<span class="version"></span> <a href="/">Home</a></div>
+        <div class="footer">
+           <div>Version: <span class="version"></span></div>
+           <div>Data: <a href="https://www.openweathermap.org" target="_blank">OpenWeatherMap</a> API</div> 
+        </div>
     </body>
 </html>

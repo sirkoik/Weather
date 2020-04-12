@@ -1,4 +1,4 @@
-const VERSION = '0.0.7a';
+const VERSION = '0.0.8';
 const WEATHERKEY = '6b80ba80e350de60e41ab0ccf87ad068';
 const LATDEFAULT = 51.5;                                    // london defaults
 const LONDEFAULT = 0.128;
@@ -85,6 +85,8 @@ function Weather() {
 
             document.querySelector('.weather-temp-'+tempType).textContent = tempType + ' ' + temp.c + 'C / ' + temp.f + 'F';
             document.querySelector('.weather-temp-'+tempType).style.color = 'hsl(' + temp.tcolor + ', 100%, 50%)'; 
+            
+            if (tempType == 'avg') document.querySelector('.header').style.backgroundColor = 'hsl(' + temp.tcolor + ', 100%, 50%)';
         }
         
         document.querySelector('.weather-wind').textContent = fields.wind.kph + ' km/h / ' + fields.wind.mph + ' mph ';
@@ -196,27 +198,38 @@ function Weather() {
         
         return {
             sunrise: this.formatDate(sun.sunrise, true), 
+            sunriseStamp: sun.sunrise,
             sunset: this.formatDate(sun.sunset, true),
+            sunsetStamp: sun.sunset,
             daylight: daylight,
             daylightHrs: daylightHrs
         };
     }
     
     this.getUpdated = data => {
-        return this.formatDate(data.dt, true);
+        return this.formatDate(data.dt, true, true);
     }
     
     // Weather.checkNight: check if nighttime and if so, invert colors
     this.checkNight = data => {
-        console.log(data);
         var curDate = new Date().getTime();
-        if (curDate > data.sunset || curDate < data.sunrise) {
+        
+        data = JSON.parse(data);
+        let sunrise = data.sys.sunrise * 1000;
+        let sunset = data.sys.sunset * 1000;
+        
+        let isDay = curDate > sunrise && curDate < sunset;
+        
+        // nighttime
+        if (!isDay)  {
             document.querySelector('*').style.color = '#fff';
             document.body.style.backgroundColor = '#000';
+        } else {
+            alert(curDate + ' ' +  data.sys.sunrise*1000);
         }
     }
     
-    this.formatDate = (ts, unix) => {
+    this.formatDate = (ts, unix, noYear) => {
         if (unix) ts *= 1000;
         
         var date = new Date(ts);
@@ -224,10 +237,12 @@ function Weather() {
         var options = {
             month:  'numeric', 
             day:    'numeric', 
-            year:   'numeric', 
+            //year:   'numeric', 
             hour:   'numeric', 
             minute: 'numeric'
         };       
+        
+        if (!noYear) options.year = 'numeric';
         
         return date.toLocaleDateString(date, options).replace(',', '');
     }
