@@ -1,4 +1,4 @@
-const VERSION = '0.0.11';
+const VERSION = '0.0.11a';
 const WEATHERKEY = '6b80ba80e350de60e41ab0ccf87ad068';
 const LATDEFAULT = 51.5;                                    // london defaults
 const LONDEFAULT = 0.128;
@@ -40,7 +40,7 @@ function Weather() {
         // fail: couldn't get the coordinates for some reason.
         coordsPromise.catch(positionError => {
             //alert(positionError.message);
-            console.log(positionError.message);
+            //console.log(positionError.message);
             document.querySelector('.message').textContent = ' (unable to read position data)';
             
             pos.lat = LATDEFAULT;
@@ -60,6 +60,9 @@ function Weather() {
             this.populateFields(data);
             this.checkNight(data);
             this.delayedRefresh();
+        }
+        xhr.onerror = () => {
+            alert('Connection error. Check your internet connection.');
         }
         xhr.open('GET', this.getURL('weather'), true);
         xhr.send();
@@ -114,6 +117,10 @@ function Weather() {
         }
         xhr.open('GET', this.getURL('onecall'), true);
         xhr.send();
+        
+        xhr.onerror = () => {
+            //alert('error');
+        }
     }    
     
     

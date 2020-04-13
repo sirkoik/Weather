@@ -1,5 +1,9 @@
 # Weather
 
+## v0.0.11a
+Corrected fonts to a fixed size.
+Implemented some error checking (needs more work).
+
 ## v0.0.11
 Added "Feels like" temperature.
 Added wind gust (will show if data is available).
