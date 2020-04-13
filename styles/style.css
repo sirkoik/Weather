@@ -4,7 +4,19 @@ body {
 
 * {
     font-family: monospace;
-    font-size: 20pt;
+/*    font-size: 20pt;*/
+}
+
+@media only screen and (max-width: 768px) {
+    body {
+        font-size: 30pt;
+    }
+}
+
+@media only screen and (min-width: 769px) {
+    body {
+        font-size: 20pt;
+    }
 }
 
 ul {
