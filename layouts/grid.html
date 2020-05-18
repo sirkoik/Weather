@@ -10,7 +10,7 @@
         /*        grid-template-rows: auto auto;*/
         grid-auto-rows: 1fr;
         
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
 /*        grid-template-rows: repeat(auto-fit, minmax(1ft, 1fr));*/
     }
 
@@ -21,9 +21,7 @@
         text-align: center;
         padding: 20px;
         
-        font-size: clamp(1rem, 2.5vw, 2rem); 
-        
-        height: 10vw;
+        font-size: clamp(1.5rem, 2.5vw, 2rem); 
     }
 
 </style>
@@ -52,7 +50,10 @@
     <div>Humidity <span class="weather-humidity"></span></div>
     <div>Pressure <span class="weather-pressure"></span></div>
     <div><span class="weather-visibility"></span></div>
-    <div>Sunrise</div>
+    <div class="weather-rain-container">
+        <div class="weather-rain"></div>
+    </div>
+    <div class="weather-sun">Sunrise</div>
     <div>Sunset</div>
     <div>Daylight</div>
     <div>Night</div>
