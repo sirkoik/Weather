@@ -1,0 +1,101 @@
+<script src="../scripts/Weather.js"></script>
+
+<style>
+    * {
+        font-family: sans-serif;
+    }
+
+    .grid-container {
+        display: grid;
+        /*        grid-template-rows: auto auto;*/
+        grid-auto-rows: 1fr;
+        
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+/*        grid-template-rows: repeat(auto-fit, minmax(1ft, 1fr));*/
+    }
+
+    .grid-container>div {        
+        background-color: aliceblue;
+
+        border: 1px solid #000;
+        text-align: center;
+        padding: 20px;
+        
+        font-size: clamp(1rem, 2.5vw, 2rem); 
+        
+        height: 10vw;
+    }
+
+</style>
+
+<div class="header">
+    <div>
+        <span class="weather-name">(loading place...)</span>
+    </div>
+    <div><span class="weather-last-updated">...</span></div>
+    <div><a href="/">Home</a></div>
+</div>
+
+<div class="grid-container">
+    <div>
+        <div>
+            <div class="weather-temp-max"></div>
+            <div class="weather-temp-avg"></div>
+            <div class="weather-temp-min"></div>
+        </div>
+    </div>
+    <div><span class="weather-temp-feels-like"></span></div>
+    <div>Clouds <span class="weather-clouds"></span></div>
+    <div><a href="https://www.weather.gov/ilx/uv-index" target="_blank" class="weather-uvi-link">UV</a> <span class="weather-uvi"></span></div>
+    <div>Wind <span class="weather-wind"></span>&nbsp;<div class="wind-direction"></div>
+    </div>
+    <div>Humidity <span class="weather-humidity"></span></div>
+    <div>Pressure <span class="weather-pressure"></span></div>
+    <div><span class="weather-visibility"></span></div>
+    <div>Sunrise</div>
+    <div>Sunset</div>
+    <div>Daylight</div>
+    <div>Night</div>
+    <div>Three<br/>Line<br/>Box</div>
+    <div>5</div>
+    <div>5</div>
+    <div>5</div>
+    <div>5</div>
+    <div>5</div>
+    <div>5</div>
+    <div>5</div>
+    <div>5</div>
+    <div>5</div>
+    <div>5</div>
+    <div>5</div>
+    <div>5</div>
+    <div>5</div>
+    <div>5</div>
+    <div>5</div>
+    <div>5</div>
+    <div>5</div>
+    <div>5</div>
+    <div>5</div>
+    <div>5</div>
+    <div>5</div>
+</div>
+
+
+<p>Humidity: Water drop background that gets more dense with higher numbers.</p>
+
+<p>Make clouds (and other panes) "simple information" which can be tapped to reveal more complex information.</p>
+
+
+
+<p>5/17 made this grid layout responsive.</p>
+
+
+
+
+<div class="footer">
+    <div>Version: <span class="version"></span></div>
+    <div>Refreshes every <span class="refresh"></span> seconds.</div>
+    <div>Data feed refreshes every <span class="data-refresh"></span> minutes.</div>
+    <div>Data: <a href="https://www.openweathermap.org" target="_blank">OpenWeatherMap</a> API</div>
+    <div>Temperature may be the average of multiple samples in the area.</div>
+</div>

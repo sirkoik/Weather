@@ -1,0 +1,23 @@
+{
+  "name": "Weather",
+  "version": "1.0.0",
+  "description": "Corrected fonts to a fixed size.\r Implemented some error checking (needs more work).",
+  "main": "index.js",
+  "scripts": {
+    "start": "lite-server"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sirkoik/Weather.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sirkoik/Weather/issues"
+  },
+  "homepage": "https://github.com/sirkoik/Weather#readme",
+  "devDependencies": {
+    "lite-server": "^2.5.4"
+  }
+}
