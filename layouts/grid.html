@@ -1,6 +1,10 @@
 <script src="../scripts/Weather.js"></script>
 
 <style>
+    body {
+        margin: 0.2em;
+    }
+    
     * {
         font-family: sans-serif;
     }
@@ -22,7 +26,11 @@
         margin: 0;
 
         padding: 0.2em;
-        
+
+        font-size: clamp(2rem, 4vw, 3rem);
+    }
+
+    .footer {
         font-size: clamp(2rem, 4vw, 3rem);
     }
 
@@ -105,15 +113,17 @@
 </div>
 
 
-<p>Todo</p>
-
-<p>Humidity: Water drop background that gets more dense with higher numbers.</p>
-
-<p>Make clouds (and other panes) "simple information" which can be tapped to reveal more complex information.</p>
-
-<p>5/17 made this grid layout responsive.</p>
-
 <div class="footer">
+    <div>
+        <p>Todo</p>
+
+        <p>Humidity: Water drop background that gets more dense with higher numbers.</p>
+
+        <p>Make clouds (and other panes) "simple information" which can be tapped to reveal more complex information.</p>
+
+        <p>5/17 made this grid layout responsive.</p>
+    </div>
+
     <div>Version: <span class="version"></span> (grid layout test)</div>
     <div>Refreshes every <span class="refresh"></span> seconds.</div>
     <div>Data feed refreshes every <span class="data-refresh"></span> minutes.</div>
