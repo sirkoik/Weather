@@ -1,15 +1,18 @@
-const VERSION = '0.0.11a';
+const VERSION = '0.0.12';
 const WEATHERKEY = '6b80ba80e350de60e41ab0ccf87ad068';
 const LATDEFAULT = 51.5;                                    // london defaults
 const LONDEFAULT = 0.128;
 const REFRESHDELAY = 60000;
 const DATAREFRESH = 300000;
+const UNITS_METRIC = 'metric';
+const UNITS_IMPERIAL = 'imperial';
 
 function Weather() {    
     var pos = {lat: LATDEFAULT, lon: LONDEFAULT};
     
     var refreshTimeout = -1;
-    
+    let units = UNITS_METRIC;
+
     document.querySelector('.refresh').textContent = REFRESHDELAY / 1000;
     document.querySelector('.data-refresh').textContent = DATAREFRESH / 1000 / 60;
     
@@ -58,7 +61,7 @@ function Weather() {
         xhr.onload = (data) => {
             var data = xhr.response;
             this.populateFields(data);
-            this.checkNight(data);
+            //this.checkNight(data);
             this.delayedRefresh();
         }
         xhr.onerror = () => {
@@ -90,8 +93,14 @@ function Weather() {
             if (color < 0) color = 0;
             if (color > 160) color = 160;
             
-            document.querySelector('.weather-temp-feels-like').textContent = tc + 'C / ' + tf + 'F';
-            document.querySelector('.weather-temp-feels-like').style.color = 'hsl(' + color + ', 100%, 50%)';
+            let weatherEmoji = '🙂';
+            if (tc < 10) weatherEmoji = '⛄';
+            if (tc < -5) weatherEmoji = '🥶';
+            if (tc > 25) weatherEmoji = '🏖';
+            if (tc > 30) weatherEmoji = '🥵';
+
+            document.querySelector('.weather-temp-feels-like').textContent = (units === UNITS_METRIC? tc + 'C' : tf + 'F') + ' ' + weatherEmoji;
+            document.querySelector('.weather-temp-feels-like').style.color = 'hsl(' + color + ', 50%, 50%)';
             
             // Wind gust
             if (data.current.wind_gust) {
@@ -103,6 +112,7 @@ function Weather() {
             // UVI
             let uvi = data.current.uvi;
             let uvRatings = ['Low', 'Moderate', 'High', 'Very High', 'Extreme'];
+            let uvEmojis = ['😀', '🙂', '😯', '🔥', '☠'];
             let uvColors = ['#00ff00', '#ffff00', '#ff9900', '#ff0099', '#90c0f0'];
             let uviArrIndex = 4;
             if (uvi < 11) uviArrIndex = 3;
@@ -110,7 +120,7 @@ function Weather() {
             if (uvi < 6) uviArrIndex = 1;
             if (uvi < 3) uviArrIndex = 0;
             
-            document.querySelector('.weather-uvi').innerHTML = data.current.uvi + ' (' + uvRatings[uviArrIndex] + ')';
+            document.querySelector('.weather-uvi').innerHTML = data.current.uvi + '<span title="' + uvRatings[uviArrIndex] + '">' + uvEmojis[uviArrIndex] + '</span>';
             document.querySelector('.weather-uvi').style.color = uvColors[uviArrIndex];
             
             document.querySelector('.weather-uvi-link').href = 'https://enviro.epa.gov/enviro/uv_search_v2?minx='+pos.lon+'&miny='+pos.lat+'&maxx='+pos.lon+'&maxy='+pos.lat;
@@ -153,13 +163,13 @@ function Weather() {
         for (var tempType in fields.temps) {
             var temp = fields.temps[tempType];
 
-            document.querySelector('.weather-temp-'+tempType).textContent = tempType + ' ' + temp.c + 'C / ' + temp.f + 'F';
-            document.querySelector('.weather-temp-'+tempType).style.color = 'hsl(' + temp.tcolor + ', 100%, 50%)'; 
+            document.querySelector('.weather-temp-'+tempType).innerHTML = tempType + ' <span class="larger">' + (units == UNITS_METRIC? temp.c + 'C' : temp.f + 'F') + '</span>';
+            document.querySelector('.weather-temp-'+tempType).style.color = 'hsl(' + temp.tcolor + ', 50%, 50%)'; 
             
-            if (tempType == 'avg') document.querySelector('.header').style.backgroundColor = 'hsl(' + temp.tcolor + ', 100%, 50%)';
+            //if (tempType == 'avg') document.querySelector('.header').style.backgroundColor = 'hsl(' + temp.tcolor + ', 50%, 50%)';
         }
         
-        document.querySelector('.weather-wind').textContent = fields.wind.kph + ' km/h / ' + fields.wind.mph + ' mph ';
+        document.querySelector('.weather-wind').textContent = units === UNITS_METRIC? fields.wind.kph + ' km/h ' : fields.wind.mph + ' mph ';
         
         if (fields.wind.rdir) {
             document.querySelector('.weather-wind').textContent += fields.wind.rdir;
@@ -167,7 +177,11 @@ function Weather() {
             document.querySelector('.wind-direction').innerHTML = '&uarr;';
         }
         
-        document.querySelector('.weather-clouds').textContent = fields.clouds + '%';
+        const cloudEmojis = ['☁', '🌥', '⛅', '🌤', '☀'];
+        let cEIndex = 5 - Math.round(fields.clouds * 0.05);
+        if (cEIndex < 0) cEIndex = 0;
+        const cloudEmoji = cloudEmojis[cEIndex];
+        document.querySelector('.weather-clouds').textContent = fields.clouds + '% ' + cloudEmoji;
         
         if (data.rain) {
             document.querySelector('.weather-rain').textContent = this.parseObj(data.rain);
@@ -179,13 +193,19 @@ function Weather() {
             document.querySelector('.weather-snow-container').classList.remove('hide');
         }
         
-        document.querySelector('.weather-humidity').textContent = fields.humidity + '%';
+        const humidityEmojis = ['🌵', '💧', '💧', '💧', '🚿'];
+        let humidityEmojiIndex = Math.round(fields.humidity * 0.05);
+        if (humidityEmojiIndex > 4) humidityEmojiIndex = 4;
+        const humidityEmoji = humidityEmojis[humidityEmojiIndex];
+
+        document.querySelector('.weather-humidity').innerHTML = fields.humidity + '%' + '<br/>' + humidityEmoji;
         document.querySelector('.weather-pressure').textContent = 
-            fields.pressure.phPa + ' hPa/mbar / ' + fields.pressure.pPsi + ' psi / ' + fields.pressure.pAtm + ' atm / ' + fields.pressure.pMmhg + ' mm Hg'; 
+            units === UNITS_METRIC? fields.pressure.phPa + ' hPa/mbar' : fields.pressure.pPsi + ' psi'; 
+            //fields.pressure.phPa + ' hPa/mbar / ' + fields.pressure.pPsi + ' psi / ' + fields.pressure.pAtm + ' atm / ' + fields.pressure.pMmhg + ' mm Hg'; 
         
-        document.querySelector('.weather-visibility').textContent = fields.visibility.km + 'km / ' + fields.visibility.mi + ' mi';
+        document.querySelector('.weather-visibility').textContent = units === UNITS_METRIC? fields.visibility.km + 'km' : fields.visibility.mi + ' mi';
         
-        document.querySelector('.weather-sun').innerHTML = 'Sunrise ' + fields.sun.sunrise + '<br/>Sunset &nbsp;' + fields.sun.sunset + '<br/>Daylight ' + fields.sun.daylightHrs + ' hours / ' + fields.sun.daylight + '%<br>Night '+ fields.sun.nightHrs + ' hours / ' + fields.sun.night + '%';
+        document.querySelector('.weather-sun').innerHTML = '🌞 ' + fields.sun.sunrise + '<br/>🌛 ' + fields.sun.sunset + '<br/>🌞 ' + fields.sun.daylightHrs + 'h / ' + fields.sun.daylight + '%<br>🌛 '+ fields.sun.nightHrs + 'h / ' + fields.sun.night + '%';
 
         document.querySelector('.weather-last-updated').textContent = fields.updated;
     }
@@ -269,9 +289,9 @@ function Weather() {
         var nightHrs = Math.round(10 * 24 * (1-dayPct)) / 10;
         
         return {
-            sunrise: this.formatDate(sun.sunrise, true), 
+            sunrise: this.formatTime(sun.sunrise, true), 
             sunriseStamp: sun.sunrise,
-            sunset: this.formatDate(sun.sunset, true),
+            sunset: this.formatTime(sun.sunset, true),
             sunsetStamp: sun.sunset,
             daylight: daylight,
             daylightHrs: daylightHrs,
@@ -318,7 +338,13 @@ function Weather() {
         
         if (!noYear) options.year = 'numeric';
         
-        return date.toLocaleDateString(date, options).replace(',', '');
+        return date.toLocaleDateString([], options).replace(',', '');
+    }
+
+    this.formatTime = (ts, unix) => {
+        ts = unix? ts * 1000 : ts;
+
+        return new Date(ts).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})
     }
     
     // delayedRefresh: Refreshes data after a delay.

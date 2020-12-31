@@ -1,5 +1,11 @@
 # Weather
 
+## v0.0.12
+Overhauled display
+Added emojis to indicate intensity of units (i.e., a freeze emoji for cold weather, a cactus for very low humidity)
+Improved readability somewhat (still needs work)
+Temporarily disabled nighttime checking
+
 ## v0.0.11a
 Corrected fonts to a fixed size.
 Implemented some error checking (needs more work).
