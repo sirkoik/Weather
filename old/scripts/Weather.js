@@ -1,4 +1,4 @@
-const VERSION = '0.0.13';
+const VERSION = '0.0.12';
 const WEATHERKEY = '6b80ba80e350de60e41ab0ccf87ad068';
 const LATDEFAULT = 51.5;                                    // london defaults
 const LONDEFAULT = 0.128;
@@ -61,7 +61,7 @@ function Weather() {
         xhr.onload = (data) => {
             var data = xhr.response;
             this.populateFields(data);
-            //this.checkNight(data);
+            this.checkNight(data);
             this.delayedRefresh();
         }
         xhr.onerror = () => {

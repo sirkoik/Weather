@@ -1,68 +1,96 @@
-<!DOCTYPE HTML>
-<html>
-    <head>
-        <meta charset="UTF-8">
-        <link rel="stylesheet" type="text/css" href="styles/style.css">
-        <script src="scripts/Weather.js"></script>
+<script src="./scripts/Weather.js"></script>
 
-        <title>Weather</title>
-    </head>
+<link rel="stylesheet" type="text/css" href="./styles/weather-app.css">
+<link rel="stylesheet" type="text/css" href="./styles/cards.css">
+
+<div id="weather-app" class="hide">
+    <div class="header">
+        <div>
+            Weather for <span class="weather-name">(loading place...)</span>
+        </div>    
     
-    <body>
-        <div class="header">
-              <div>
-                  <span class="weather-name">(loading place...)</span>
-              </div>
-            <div><span class="weather-last-updated">...</span></div>
-            <div><a href="/">Home</a></div>
+        <div>
+            <a href="/">Home</a>
         </div>
-        
-        <div class="content">
-            <h3><span class="message"></span></h3>
-            
-            <div>New! Check out the <a href="layouts/grid.html">grid layout.</a></div>
-            
-            <br/>
-            
-            <div>NOTE: Figures are not guaranteed to be accurate.</div>
-            
-            <br>
-             
-            Temperature
+    </div>
+    
+    <div class="cards">
+        <div class="card">
             <div>
+                <p>Temperature</p>
                 <div class="weather-temp-max"></div>
                 <div class="weather-temp-avg"></div>
                 <div class="weather-temp-min"></div>
             </div>
-            
-            <br/>
-            
-            <div>Feels like <span class="weather-temp-feels-like"></span></div>
-            
-            <p><a href="https://www.weather.gov/ilx/uv-index" target="_blank" class="weather-uvi-link">UV Index</a> <span class="weather-uvi"></span></p>
-                        
-
-            <div>Wind <span class="weather-wind"></span>&nbsp;<div class="wind-direction"></div><br/>
-            
-            <div class="wind-gust-container" style="display:none">Wind gust <span class="weather-wind-gust"></span></div>
-            </div>
-            
-            <p>Clouds <span class="weather-clouds"></span></p>
-            <p class="weather-rain-container hide">Rain <span class="weather-rain"></span></p>
-            <p class="weather-snow-cotnainer hide">Snow <span class="weather-snow"></span></p>
-
-            <p>Humidity <span class="weather-humidity"></span></p>
-            <p>Pressure <span class="weather-pressure"></span></p>
-            <p>Visibility <span class="weather-visibility"></span></p>
-            <p class="weather-sun"></p>
+        </div>
+    
+        <div class="card">
+            <div><p>Feels Like</p><span class="larger weather-temp-feels-like"></span></div>
+        </div>
+    
+        <div class="card">
+            <div><p>Clouds</p><span class="larger weather-clouds"></span></div>
+        </div>
+    
+        <div class="card">
+            <div><p>UV index<sup><a href="https://www.weather.gov/ilx/uv-index" target="_blank" class="weather-uvi-link">[1]</a></sup></p><span class="larger weather-uvi"></span></div>
         </div>
         
-        <div class="footer">
-           <div>Version: <span class="version"></span></div>
-           <div>Refreshes every <span class="refresh"></span> seconds.</div>
-           <div>Data feed refreshes every <span class="data-refresh"></span> minutes.</div>
-           <div>Data: <a href="https://www.openweathermap.org" target="_blank">OpenWeatherMap</a> API</div>
-           <div>Temperature may be the average of multiple samples in the area.</div>
+        <div class="card">
+            <div><p>Wind</p><span class="weather-wind larger"></span>&nbsp;<div class="wind-direction"></div>
+            </div>
         </div>
-    </body>
-</html>
+    
+        <div class="card">
+            <div><p>Humidity</p><span class="weather-humidity larger"></span></div>
+        </div>
+    
+        <div class="card">
+            <div><p>Pressure</p><span class="weather-pressure larger"></span></div>
+        </div>
+    
+        <div class="card">
+            <div><p>Visibility</p><span class="weather-visibility larger"></span></div>
+        </div>
+    
+        <div class="card weather-rain-container hide">
+            <div>
+                <p>Rain</p><div class="weather-rain larger"></div>
+            </div>
+        </div>
+    
+        <div class="card">
+            <div>
+                <span class="larger">Day / Night</span><br/>
+                <span class="weather-sun"></span>
+            </div>
+        </div>
+    </div>
+    
+    <div style="text-align: center;">
+    <p><button class="footer" onclick="document.getElementById('footer-info').classList.remove('hide');this.classList.add('hide')">More Info</button></p>
+    </div>
+    
+    <div id="footer-info" class="footer hide">
+        <p>More info</p>
+    
+        <div>
+            <p>Todo</p>
+    
+            <p>Humidity: Water drop background that gets more dense with higher numbers.</p>
+    
+            <p>Make clouds (and other panes) "simple information" which can be tapped to reveal more complex information.</p>
+    
+            <p>5/17 made this grid layout responsive.</p>
+            <p>12/31 major visual overhaul.</p>
+        </div>
+    
+        <div>Version: <span class="version"></span> (grid layout test)</div>
+        <div>Refreshes every <span class="refresh"></span> seconds.</div>
+        <div>Data last updated <span class="weather-last-updated">...</span></div>
+        <div>Data feed refreshes every <span class="data-refresh"></span> minutes.</div>
+        <div>Temperature may be the average of multiple samples in the area.</div>
+    </div>
+    
+    <div class="footer" style="text-align: center;">Data: <a href="https://www.openweathermap.org" target="_blank">OpenWeatherMap</a> API</div>
+</div>

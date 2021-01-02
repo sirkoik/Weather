@@ -1,0 +1,71 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <link rel="stylesheet" type="text/css" href="./styles/style.css">
+        <script src="./scripts/Weather.js"></script>
+
+        <title>Weather</title>
+    </head>
+    
+    <body>        
+        <div id="weather-app" class="hide">
+            <div class="header">
+                  <div>
+                      <span class="weather-name">(loading place...)</span>
+                  </div>
+                <div><span class="weather-last-updated">...</span></div>
+                <div><a href="/">Home</a></div>
+            </div>
+            
+            <div class="content">
+                <h3><span class="message"></span></h3>
+                
+                <div>Note: 
+                    <ul>
+                        <li>The <a href="../index.html">grid layout</a> is now the default.</li>
+                        <li>Figures are not guaranteed to be accurate.</li>
+                    </ul>
+                </div>
+                
+                <br>
+                 
+                Temperature
+                <div>
+                    <div class="weather-temp-max"></div>
+                    <div class="weather-temp-avg"></div>
+                    <div class="weather-temp-min"></div>
+                </div>
+                
+                <br/>
+                
+                <div>Feels like <span class="weather-temp-feels-like"></span></div>
+                
+                <p><a href="https://www.weather.gov/ilx/uv-index" target="_blank" class="weather-uvi-link">UV Index</a> <span class="weather-uvi"></span></p>
+                            
+    
+                <div>Wind <span class="weather-wind"></span>&nbsp;<div class="wind-direction"></div><br/>
+                
+                <div class="wind-gust-container" style="display:none">Wind gust <span class="weather-wind-gust"></span></div>
+                </div>
+                
+                <p>Clouds <span class="weather-clouds"></span></p>
+                <p class="weather-rain-container hide">Rain <span class="weather-rain"></span></p>
+                <p class="weather-snow-cotnainer hide">Snow <span class="weather-snow"></span></p>
+    
+                <p>Humidity <span class="weather-humidity"></span></p>
+                <p>Pressure <span class="weather-pressure"></span></p>
+                <p>Visibility <span class="weather-visibility"></span></p>
+                <p class="weather-sun"></p>
+            </div>
+            
+            <div class="footer">
+               <div>Version: <span class="version"></span></div>
+               <div>Refreshes every <span class="refresh"></span> seconds.</div>
+               <div>Data feed refreshes every <span class="data-refresh"></span> minutes.</div>
+               <div>Data: <a href="https://www.openweathermap.org" target="_blank">OpenWeatherMap</a> API</div>
+               <div>Temperature may be the average of multiple samples in the area.</div>
+            </div>
+        </div>
+    </body>
+</html>

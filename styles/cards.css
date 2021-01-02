@@ -1,0 +1,47 @@
+/*
+    Stylesheet for all the cards (squares)
+*/
+
+.cards {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    align-content: flex-start;
+    flex-wrap: wrap;
+    flex-grow: 1;
+}
+
+.card {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    width: 20vmax;
+    height: 20vmax;
+
+    border: 1px solid #ccc;
+    /* background-color: #eee; */
+    background-image: linear-gradient(to bottom right, #fff, #ccc);
+    box-shadow: 3px 3px 2px #ccc;
+
+    padding: 10px;
+    margin: 5px;
+
+    vertical-align: middle;
+    text-align: center;
+
+    font-size: 2vmax;
+}
+
+.card * {
+    vertical-align: baseline;
+}
+
+.card .larger {
+    /* font-size: 200%; */
+    font-size: 3vmax;
+}
+
+.card p {
+    margin: 0;
+}

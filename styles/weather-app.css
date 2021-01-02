@@ -1,0 +1,47 @@
+.hide, .card .hide {
+    display: none !important;
+}
+
+body {
+    margin: 0.2em;
+    background-image: linear-gradient(to bottom, #fff, hsl(195, 59%, 77%));
+}
+
+* {
+    font-family: sans-serif;
+}
+
+.header {
+    z-index: 1;
+
+    position: sticky;
+    top: 0;
+    left: 0;
+    right: 0;
+
+    color: #000;
+    background-image: linear-gradient(to bottom, hsl(195, 50%, 50%), hsla(195, 50%, 50%, 0.25));
+    box-shadow: 0px 2px 5px #ccc;
+
+    display: flex;
+    justify-content: space-between;
+
+    margin: 0;
+    margin-bottom: 10px;
+
+    padding: 10px;
+
+    font-size: 2vmax;
+}
+
+.footer {
+    font-size: clamp(2rem, 4vw, 3rem);
+}
+
+a, a:visited {
+    color: forestgreen;
+}
+
+.header a {
+    color: #fff;
+}

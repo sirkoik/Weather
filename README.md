@@ -1,5 +1,11 @@
 # Weather
 
+## v0.0.13
+Some display tweaks.
+Card layout is now the main one.
+
+Bug - error if user declines automatic location.
+
 ## v0.0.12
 Overhauled display
 Added emojis to indicate intensity of units (i.e., a freeze emoji for cold weather, a cactus for very low humidity)
