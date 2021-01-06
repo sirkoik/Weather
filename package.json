@@ -17,7 +17,8 @@
     "url": "https://github.com/sirkoik/Weather/issues"
   },
   "homepage": "https://github.com/sirkoik/Weather#readme",
-  "devDependencies": {
+  "devDependencies": {},
+  "dependencies": {
     "lite-server": "^2.6.1"
   }
 }

@@ -1,313 +1,265 @@
+import WeatherLocation from './WeatherLocation.js';
+import WeatherFunctions from './WeatherFunctions.js';
+import {addEvent} from './Events.js';
+import {qs, hide, unhide, setHTML} from './utility.js';
 const VERSION = '0.0.13';
 const WEATHERKEY = '6b80ba80e350de60e41ab0ccf87ad068';
-const LATDEFAULT = 51.5;                                    // london defaults
+const LATDEFAULT = 51.5; // london defaults
 const LONDEFAULT = 0.128;
 const REFRESHDELAY = 60000;
 const DATAREFRESH = 300000;
-const UNITS_METRIC = 'metric';
-const UNITS_IMPERIAL = 'imperial';
+const UNITS_METRIC = 'Metric';
+const UNITS_IMPERIAL = 'Imperial';
 
-function Weather() {    
-    var pos = {lat: LATDEFAULT, lon: LONDEFAULT};
-    
-    var refreshTimeout = -1;
-    let units = UNITS_METRIC;
 
-    document.querySelector('.refresh').textContent = REFRESHDELAY / 1000;
-    document.querySelector('.data-refresh').textContent = DATAREFRESH / 1000 / 60;
-    
-    
-    // Weather.getCoords: get geolocated coordinates if none manually provided.
-    this.getCoords = () => {
-        
-        // TODO try to chain these promises.
-        coordsPromise = new Promise((resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(
-                position => resolve(position),
-                positionError => reject(positionError),
-                {
-                    enableHighAccuracy: true
-                }
-            );            
-        });
-        
-        // success: got the coordinates.
-        coordsPromise.then(position => {
-            pos.lat = position.coords.latitude;
-            pos.lon = position.coords.longitude;
-            
-            this.getData();
-            this.getDataOneCall();
-        });
-        
-        // fail: couldn't get the coordinates for some reason.
-        coordsPromise.catch(positionError => {
-            //alert(positionError.message);
-            //console.log(positionError.message);
-            document.querySelector('.message').textContent = ' (unable to read position data)';
-            
-            pos.lat = LATDEFAULT;
-            pos.lon = LONDEFAULT;
-            
-            this.getData();
-            this.getDataOneCall();
-        });
+
+class Weather {
+    // constants
+    TYPE_WEATHER = 'weather';
+    TYPE_ONECALL = 'onecall';
+
+    units = UNITS_METRIC;
+    metric = true;
+
+    weatherData = {};
+
+    constructor() {
+        // trigger to load the weather once position data has been supplied by the user.
+        addEvent('userPositionSupplied', event => this.weatherLoad(event.detail));
+        //addEvent('refreshWeatherData', event => this.weatherLoad())
     }
-    
-    this.getURL = (type) => 'https://api.openweathermap.org/data/2.5/'+type+'?lat=' + pos.lat + '&lon=' + pos.lon + '&APPID=' + WEATHERKEY;
-    
-    this.getData = () => {
-        var xhr = new XMLHttpRequest();
-        xhr.onload = (data) => {
-            var data = xhr.response;
-            this.populateFields(data);
-            //this.checkNight(data);
-            this.delayedRefresh();
-        }
-        xhr.onerror = () => {
-            alert('Connection error. Check your internet connection.');
-        }
-        xhr.open('GET', this.getURL('weather'), true);
-        xhr.send();
+
+    weatherLoad = async (data) => {
+        this.loading = true;
+
+        console.log('In Weather class ' + data.latitude + ' ' + data.longitude);
+        await this.fetchData(data.latitude, data.longitude);
+        console.log('Promises resolved!', this.weatherData);
+
+        this.showHeader = true;
+        this.populate('header');
+
+        this.showCards = true;
+        // populate each card.
+        this.populate('temps');
+        this.populate('feelsLike');
+        this.populate('clouds');
+        this.populate('uvi');
+        this.populate('wind');
+        this.populate('humidity');
+        this.populate('pressure');
+        this.populate('visibility');
+        this.populate('rain');
+        this.populate('snow');
+        this.populate('sun');
+        this.populate('weatherTypes');
+
+        this.showFooter = true;
+
+        WeatherLocation.showLocPopup = false;
+        this.loading = false;
     }
-    
-    // getDataOneCall: Uses OpenWeatherMap's "one call" API.
-    // currently using to get UV index data
-    // I need to refactor this so it's all part of one Promise.
-    this.getDataOneCall = () => {
-        let xhr = new XMLHttpRequest();
-        xhr.onload = (data) => {
-            data = xhr.response;
-            data = JSON.parse(data);
-            //console.log(data);
-            // "Feels like" temperature
-            let feelsTemp = data.current.feels_like;
-            
-            var tc = feelsTemp - 273.15;
-            var tf = tc * 1.8 + 32;
 
-            tc = Math.round(tc * 10) / 10;
-            tf = Math.round(tf * 10) / 10;
+    // fetchData: fetch both JSON files asynchronously, and then return a promise when both have been retrieved.
+    fetchData = async (latitude, longitude) => {
+        const promise1 = fetch(this.formatURL(this.TYPE_WEATHER, latitude, longitude))
+        .then(data => data.json())
+        .then(data => this.weatherData.weather = data);
 
-            var color = 160 - tf * 2.2 + 32;
-            if (color < 0) color = 0;
-            if (color > 160) color = 160;
-            
-            let weatherEmoji = '🙂';
-            if (tc < 10) weatherEmoji = '⛄';
-            if (tc < -5) weatherEmoji = '🥶';
-            if (tc > 25) weatherEmoji = '🏖';
-            if (tc > 30) weatherEmoji = '🥵';
+        const promise2 = fetch(this.formatURL(this.TYPE_ONECALL, latitude, longitude))
+        .then(data => data.json())
+        .then(data => this.weatherData.onecall = data);
 
-            document.querySelector('.weather-temp-feels-like').textContent = (units === UNITS_METRIC? tc + 'C' : tf + 'F') + ' ' + weatherEmoji;
-            document.querySelector('.weather-temp-feels-like').style.color = 'hsl(' + color + ', 50%, 50%)';
-            
-            // Wind gust
-            if (data.current.wind_gust) {
-                document.querySelector('.weather-wind-gust').style.display = 'block';
+        await Promise.all([promise1, promise2]);
+        //.then(() => {
+            //console.log(this.weatherData);
+        //});
+    }
+
+    // populate: populate the cards.
+    populate = type => {
+        const weatherMain = this.weatherData.weather.main;
+        const oneCall = this.weatherData.onecall.current;
+        let key = '';
+
+        switch(type) {
+            case 'header':
+                key = this.weatherData.weather;
+                setHTML('.location-name', key.name);
+            break;
+
+            case 'temps':
+                key = weatherMain;
+                const temps = WeatherFunctions.getTemps(key.temp_min, key.temp, key.temp_max, this.metric);
+                const weatherHTML = [
+                    'max <span class="larger">' + temps.max + '</span>',
+                    'avg <span class="larger">' + temps.avg + '</span>',
+                    'min <span class="larger">' + temps.min + '</span>'
+                ];
+
+                setHTML('.weather-temps', weatherHTML.join('<br/>'));
+            break;
+
+            case 'feelsLike': 
+                key = oneCall.feels_like;
+                const fl = WeatherFunctions.getFeelsLike(key, this.metric);
+
+                setHTML('.weather-temp-feels-like', fl.t + ' ' + fl.emoji);
+            break;
+
+            case 'clouds':
+                key = this.weatherData.weather.clouds.all;
+                const clouds = WeatherFunctions.getClouds(key);
                 
-                document.querySelector('.weather-wind-gust').textContent = data.current.wind_gust;
-            }
-            
-            // UVI
-            let uvi = data.current.uvi;
-            let uvRatings = ['Low', 'Moderate', 'High', 'Very High', 'Extreme'];
-            let uvEmojis = ['😀', '🙂', '😯', '🔥', '☠'];
-            let uvColors = ['#00ff00', '#ffff00', '#ff9900', '#ff0099', '#90c0f0'];
-            let uviArrIndex = 4;
-            if (uvi < 11) uviArrIndex = 3;
-            if (uvi < 8) uviArrIndex = 2;
-            if (uvi < 6) uviArrIndex = 1;
-            if (uvi < 3) uviArrIndex = 0;
-            
-            document.querySelector('.weather-uvi').innerHTML = data.current.uvi + '<span title="' + uvRatings[uviArrIndex] + '">' + uvEmojis[uviArrIndex] + '</span>';
-            document.querySelector('.weather-uvi').style.color = uvColors[uviArrIndex];
-            
-            document.querySelector('.weather-uvi-link').href = 'https://enviro.epa.gov/enviro/uv_search_v2?minx='+pos.lon+'&miny='+pos.lat+'&maxx='+pos.lon+'&maxy='+pos.lat;
+                setHTML('.weather-clouds', clouds.cloudCover + ' ' + clouds.emoji);
+            break;
+
+            case 'uvi':
+                key = oneCall.uvi;
+                const uvi = WeatherFunctions.getUVI(key);
+
+                setHTML('.weather-uvi', uvi.uvi + ' ' + uvi.emoji);
+            break;
+
+            case 'wind':
+                key = this.weatherData.weather.wind;
+                const wind = WeatherFunctions.getWind(key, this.metric);
+
+                setHTML('.weather-wind', wind.speed);
+
+                // if a wind angle is supplied, show the direction and an arrow.
+                if (wind.angle) {
+                    unhide('.wind-direction');
+
+                    setHTML('.wind-direction-text', wind.direction);
+                    setHTML('.wind-angle', '&uarr;');
+                    qs('.wind-angle').style.transform = 'rotate(' + wind.angle + 'deg)';
+                } else {
+                    hide('.wind-direction');
+                }
+
+                // if a wind gust is present, add to card.
+                if (wind.gust) {
+                    setHTML('.wind-gust', wind.gustSpeed)
+                    unhide('.weather-wind-gust-container');
+                } else {
+                    hide('.weather-wind-gust-container');
+                }
+            break;
+
+            case 'humidity':
+                const humidity = WeatherFunctions.getHumidityDewPoint(oneCall.humidity, oneCall.dew_point, this.metric);
+
+                setHTML('.weather-humidity', humidity.humidity + ' ' + humidity.emoji);
+                setHTML('.weather-dewpoint', humidity.dewPoint);
+            break;
+
+            case 'pressure':
+                key = oneCall.pressure;
+                const pressure = WeatherFunctions.getPressure(key, this.metric);
+
+                setHTML('.weather-pressure', pressure.pressure);
+            break;
+
+            case 'visibility':
+                key = this.weatherData.weather.visibility;
+                const visibility = WeatherFunctions.getVisibility(key, this.metric);
+
+                setHTML('.weather-visibility', visibility);
+            break;
+
+            case 'weatherTypes': 
+                key = oneCall.weather;
+                const types = WeatherFunctions.getWeatherTypes(key);
+
+                if (types.length > 0) {
+                    setHTML('.weather-types', types.join('\n'));
+                    unhide('.weather-types-container');
+                } else {
+                    hide('.weather-types-container');
+                }
+            break;
+
+            case 'rain':
+                key = weatherMain.rain;
+                if (!key) {
+                    hide('.weather-rain-container');
+                    break;
+                }
+                
+                const rain = WeatherFunctions.getRain(key);
+                setHTML('.weather-rain', rain);
+                unhide('.weather-rain-container');
+            break;
+
+            case 'snow':
+                key = weatherMain.snow;
+                if (!key) {
+                    hide('.weather-snow-container');
+                    break;
+                }
+                
+                const snow = WeatherFunctions.getRain(key);
+                setHTML('.weather-snow', snow);
+                unhide('.weather-snow-container');
+            break;            
+
+            case 'sun':
+                key = this.weatherData.weather.sys;
+                const sun = WeatherFunctions.getSun(key);
+                const sunHTML = [
+                    '🌞 ' + sun.sunrise,
+                    '🌛 ' + sun.sunset,
+                    '🌞 ' + sun.daylightHrs + 'h / ' + sun.daylight + '%',
+                    '🌛 ' + sun.nightHrs + 'h / ' + sun.night + '%'
+                ];
+
+                setHTML('.weather-sun', sunHTML.join('<br/>'));
+            break;
         }
-        xhr.open('GET', this.getURL('onecall'), true);
-        xhr.send();
-        
-        xhr.onerror = () => {
-            //alert('error');
+    }
+
+
+    // format a url based on the type of request 
+    formatURL = (type, latitude, longitude) => 'https://api.openweathermap.org/data/2.5/'+type+'?lat=' + latitude + '&lon=' + longitude + '&APPID=' + WEATHERKEY;
+
+
+    // display functions
+    set showHeader(show) {
+        if (show) {
+            unhide('.header');
+        } else {
+            hide('.header');
         }
     }    
-    
-    
-    
-    this.populateFields = data => {
-        data = JSON.parse(data);
-        
-        //console.log(data);
-                
-        var fields = {
-            'name':       data.name, 
-            'humidity':   data.main.humidity,
-            'visibility': this.getVisibility(data),
-            'updated':    this.getUpdated(data),
-            'temps':      this.getTemps(data), 
-            'pressure':   this.getPressure(data),
-            'wind':       this.getWind(data), 
-            'clouds':     this.getClouds(data),
-            'sun':        this.getSun(data)
-        };
-        
-        //console.log(fields);
-                
-        document.title = fields.name + ' ' + fields.temps.avg.c + 'C / ' + fields.temps.avg.f + 'F';
-        
-        document.querySelector('.version').textContent = VERSION;
-        
-        [...document.querySelectorAll('.weather-name')].map(x => x.textContent = fields.name);
-        
-        
-        for (var tempType in fields.temps) {
-            var temp = fields.temps[tempType];
 
-            document.querySelector('.weather-temp-'+tempType).innerHTML = tempType + ' <span class="larger">' + (units == UNITS_METRIC? temp.c + 'C' : temp.f + 'F') + '</span>';
-            document.querySelector('.weather-temp-'+tempType).style.color = 'hsl(' + temp.tcolor + ', 50%, 50%)'; 
-            
-            //if (tempType == 'avg') document.querySelector('.header').style.backgroundColor = 'hsl(' + temp.tcolor + ', 50%, 50%)';
+    set showCards(show) {
+        if (show) {
+            unhide('.cards');
+        } else {
+            hide('.cards');
         }
-        
-        document.querySelector('.weather-wind').textContent = units === UNITS_METRIC? fields.wind.kph + ' km/h ' : fields.wind.mph + ' mph ';
-        
-        if (fields.wind.rdir) {
-            document.querySelector('.weather-wind').textContent += fields.wind.rdir;
-            document.querySelector('.wind-direction').style.transform = 'rotate(' + fields.wind.r + 'deg)';
-            document.querySelector('.wind-direction').innerHTML = '&uarr;';
-        }
-        
-        const cloudEmojis = ['☁', '🌥', '⛅', '🌤', '☀'];
-        let cEIndex = 5 - Math.round(fields.clouds * 0.05);
-        if (cEIndex < 0) cEIndex = 0;
-        const cloudEmoji = cloudEmojis[cEIndex];
-        document.querySelector('.weather-clouds').textContent = fields.clouds + '% ' + cloudEmoji;
-        
-        if (data.rain) {
-            document.querySelector('.weather-rain').textContent = this.parseObj(data.rain);
-            document.querySelector('.weather-rain-container').classList.remove('hide');
-        }
-        
-        if (data.snow) {
-            document.querySelector('.weather-snow').textContent = this.parseObj(data.snow);
-            document.querySelector('.weather-snow-container').classList.remove('hide');
-        }
-        
-        const humidityEmojis = ['🌵', '💧', '💧', '💧', '🚿'];
-        let humidityEmojiIndex = Math.round(fields.humidity * 0.05);
-        if (humidityEmojiIndex > 4) humidityEmojiIndex = 4;
-        const humidityEmoji = humidityEmojis[humidityEmojiIndex];
+    }
 
-        document.querySelector('.weather-humidity').innerHTML = fields.humidity + '%' + '<br/>' + humidityEmoji;
-        document.querySelector('.weather-pressure').textContent = 
-            units === UNITS_METRIC? fields.pressure.phPa + ' hPa/mbar' : fields.pressure.pPsi + ' psi'; 
-            //fields.pressure.phPa + ' hPa/mbar / ' + fields.pressure.pPsi + ' psi / ' + fields.pressure.pAtm + ' atm / ' + fields.pressure.pMmhg + ' mm Hg'; 
-        
-        document.querySelector('.weather-visibility').textContent = units === UNITS_METRIC? fields.visibility.km + 'km' : fields.visibility.mi + ' mi';
-        
-        document.querySelector('.weather-sun').innerHTML = '🌞 ' + fields.sun.sunrise + '<br/>🌛 ' + fields.sun.sunset + '<br/>🌞 ' + fields.sun.daylightHrs + 'h / ' + fields.sun.daylight + '%<br>🌛 '+ fields.sun.nightHrs + 'h / ' + fields.sun.night + '%';
-
-        document.querySelector('.weather-last-updated').textContent = fields.updated;
-
-        // show the app after everything is loaded.
-        document.getElementById('weather-app').classList.remove('hide');
-    }
-    
-    this.parseObj = obj => {
-        var arr = [];
-        for (el in obj) {
-            arr.push(el + ' ' + obj[el]);
+    set showFooter(show) {
+        if (show) {
+            unhide('.footer');
+        } else {
+            hide('.footer');
         }
-        return arr.join('<br/>');
-    }
-    
-    this.getTemps = data => {
-        var temps = [data.main.temp_min, data.main.temp, data.main.temp_max];
-        var tempNames = ['min', 'avg', 'max'];
-        var tempsOut = {};
-        
-        for (var x = 0; x < temps.length; x++) {
-            var tc = temps[x] - 273.15;
-            var tf = tc * 1.8 + 32;
+    }    
 
-            tc = Math.round(tc * 10) / 10;
-            tf = Math.round(tf * 10) / 10;
-
-            var color = 160 - tf * 2.2 + 32;
-            if (color < 0) color = 0;
-            if (color > 160) color = 160;
-            
-            tempsOut[tempNames[x]] = {'c': tc, 'f': tf, 'tcolor': color};
+    set loading(isLoading) {
+        if (isLoading) {
+            unhide('.loading-container');
+        } else {
+            hide('.loading-container');
         }
-                
-        return tempsOut;
     }
-    
-    this.getPressure = data => {
-        var phPa = data.main.pressure;
-        var pPsi = Math.round(phPa * 0.0145037738 * 10) / 10;
-        var pAtm = Math.round(phPa * 0.00098692326671601 * 10) / 10;
-        var pMmhg = Math.round(phPa * 0.75006157584566 * 10) / 10;
-        
-        return {'phPa': phPa, 'pPsi': pPsi, 'pAtm': pAtm, 'pMmhg': pMmhg};
-    }
-    
-    this.getWind = data => {
-        var wk = data.wind.speed;
-        var wm = Math.round(10 * wk / 1.6) / 10;
+}
 
-        var windObj = {'kph': wk, 'mph': wm};
-        
-        if (data.wind.deg) {
-            var r = data.wind.deg;
-            var rdirArr = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'SWW', 'W', 'WNW', 'NW', 'NNW'];
-            var rdir = rdirArr[Math.ceil(14 * r / 360)];
-            
-            windObj.r = r;
-            windObj.rdir = rdir;
-        }
-            
-        return windObj;
-    }
-    
-    this.getClouds = data => {
-        return data.clouds.all;
-    }
-    
-    this.getVisibility = data => {
-        var k = Math.round(10 * data.visibility / 1000) / 10;
-        var mi = Math.round(10 * data.visibility / 1600) / 10;
-        return {'km': k, 'mi': mi};
-    }
-    
-    this.getSun = data => {
-        var sun = data.sys;
-        
-        var dayPct = (sun.sunset - sun.sunrise) / 86400;
-        
-        var daylight = Math.round(1000 * dayPct) / 10;
-        var daylightHrs = Math.round(10 * 24 * dayPct) / 10;
-        
-        var night = 100 - daylight;
-        var nightHrs = Math.round(10 * 24 * (1-dayPct)) / 10;
-        
-        return {
-            sunrise: this.formatTime(sun.sunrise, true), 
-            sunriseStamp: sun.sunrise,
-            sunset: this.formatTime(sun.sunset, true),
-            sunsetStamp: sun.sunset,
-            daylight: daylight,
-            daylightHrs: daylightHrs,
-            night: night,
-            nightHrs: nightHrs
-        };
-    }
-    
-    this.getUpdated = data => {
-        return this.formatDate(data.dt, true, true);
-    }
-    
+
+function WeatherOld() {  
     // Weather.checkNight: check if nighttime and if so, invert colors
     this.checkNight = data => {
         var curDate = new Date().getTime();
@@ -327,29 +279,6 @@ function Weather() {
         }
     }
     
-    this.formatDate = (ts, unix, noYear) => {
-        if (unix) ts *= 1000;
-        
-        var date = new Date(ts);
-         
-        var options = {
-            month:  'numeric', 
-            day:    'numeric', 
-            //year:   'numeric', 
-            hour:   'numeric', 
-            minute: 'numeric'
-        };       
-        
-        if (!noYear) options.year = 'numeric';
-        
-        return date.toLocaleDateString([], options).replace(',', '');
-    }
-
-    this.formatTime = (ts, unix) => {
-        ts = unix? ts * 1000 : ts;
-
-        return new Date(ts).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})
-    }
     
     // delayedRefresh: Refreshes data after a delay.
     this.delayedRefresh = () => {
@@ -360,7 +289,4 @@ function Weather() {
     }
 }
 
-window.onload = () => {
-    var weather = new Weather();
-    weather.getCoords();
-}
+export default Weather;

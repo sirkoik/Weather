@@ -1,0 +1,31 @@
+.popup-container {
+    z-index: 10;
+
+    position: fixed;
+    top: 0; left: 0; bottom: 0; right: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.popup-container .popup {
+    width: 30vmax;
+
+    border: 1px solid #ccc;
+    /* background-color: #eee; */
+    background-image: linear-gradient(to bottom right, #fff, #ccc);
+    box-shadow: 3px 3px 2px #ccc;
+
+    padding: 0 20px 0 20px;
+    margin: 5px;
+
+    vertical-align: middle;
+    text-align: center;
+
+    font-size: 2vmax;    
+}
+
+.popup-container .popup * {
+    font-size: 2vmax;
+}

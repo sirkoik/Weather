@@ -1,5 +1,12 @@
 # Weather
 
+## Structure
+Weather uses two APIs: OpenWeatherMap and LocationIQ.
+
+OpenWeatherMap is used to get weather-related information for a location, such as from Lat/Long coordinates provided by the user's device.
+
+LocationIQ is used to get Lat/Long coordinates from a user-provided location or address. This way, they can get information even if they don't want to disclose their exact location (iOS has a way of setting a less exact location).
+
 ## v0.0.13
 Some display tweaks.
 Card layout is now the main one.
