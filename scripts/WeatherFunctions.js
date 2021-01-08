@@ -6,14 +6,11 @@ class WeatherFunctions {
         
         for (var x = 0; x < temps.length; x++) {
             var t = this.getTemp(temps[x], metric);
-    
-            //var color = 160 - tf * 2.2 + 32;
-            //if (color < 0) color = 0;
-            //if (color > 160) color = 160;
-            let color = 0;
             
-            tempsOut[tempNames[x]] = t; //{'temperature': t, 'tcolor': color};
+            tempsOut[tempNames[x]] = t;
         }
+
+        tempsOut.hue = this.getTempHue(tempAvg);
                 
         return tempsOut;
     }
@@ -21,6 +18,7 @@ class WeatherFunctions {
     // getFeelsLike: Get the "feels like" temperature and an emoji as well.
     static getFeelsLike(tempKelvin, metric) {
         const t = this.getTemp(tempKelvin, metric);
+        const h = this.getTempHue(tempKelvin);
 
         let emoji = '🙂';
         const tc = tempKelvin - 273.15
@@ -30,14 +28,15 @@ class WeatherFunctions {
         if (tc > 25) emoji = '🏖';
         if (tc > 30) emoji = '🥵';
 
-        return {t: t, emoji: emoji};
+        return {t: t, emoji: emoji, hue: h};
     }
 
     // getUVI: return a UVI index with color and grade information.
     static getUVI(uvi) {
-        let grades = ['Low', 'Moderate', 'High', 'Very High', 'Extreme'];
-        let colors = ['#00ff00', '#ffff00', '#ff9900', '#ff0099', '#90c0f0'];
-        let emojis = ['😀', '🙂', '😯', '🔥', '☠'];
+        const grades = ['Low', 'Moderate', 'High', 'Very High', 'Extreme'];
+        //const colors = ['#00ff00', '#ffff00', '#ff9900', '#ff0099', '#90c0f0'];
+        const hues = [120, 60, 36, 324, 210];
+        const emojis = ['😀', '🙂', '😯', '🔥', '☠'];
 
         let i = 4;
         if (uvi < 11) i = 3;
@@ -48,7 +47,7 @@ class WeatherFunctions {
         return {
             uvi: uvi,
             grade: grades[i], 
-            color: colors[i], 
+            hue: hues[i], 
             emoji: emojis[i]
         };
     }
@@ -64,13 +63,25 @@ class WeatherFunctions {
         return metric? tc + 'C' : tf + 'F';
     }
 
+    // getTempHue: get a color hue for a temperature (260K = very cold, 320K = very hot)
+    static getTempHue(tempKelvin) {
+        // color range: blue = 260K, red = 320K
+        const colorPercent = 1 - (320 - tempKelvin) / 60 // temp in K
+        let h = 225 + 30 * colorPercent;
+        
+        if (tempKelvin < 260) h = 225;
+        if (tempKelvin > 320) h = 255;
+
+        return h;
+    }
+
     static getClouds = cloudCover => {
         const cloudEmojis = ['☁', '🌥', '⛅', '🌤', '☀'];
         let cEIndex = 5 - Math.round(cloudCover * 0.05);
         if (cEIndex < 0) cEIndex = 0;
         const cloudEmoji = cloudEmojis[cEIndex];
 
-        return {cloudCover: cloudCover + '%', emoji: cloudEmoji};
+        return {cloudCover: cloudCover, emoji: cloudEmoji};
     }    
         
     static getWind = (windData, metric) => {

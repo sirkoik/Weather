@@ -2,44 +2,55 @@ import WeatherLocation from './WeatherLocation.js';
 import WeatherFunctions from './WeatherFunctions.js';
 import {addEvent} from './Events.js';
 import {qs, hide, unhide, setHTML} from './utility.js';
-const VERSION = '0.0.13';
-const WEATHERKEY = '6b80ba80e350de60e41ab0ccf87ad068';
-const LATDEFAULT = 51.5; // london defaults
-const LONDEFAULT = 0.128;
-const REFRESHDELAY = 60000;
-const DATAREFRESH = 300000;
-const UNITS_METRIC = 'Metric';
-const UNITS_IMPERIAL = 'Imperial';
-
-
 
 class Weather {
+    // API key
+    WEATHERKEY = '6b80ba80e350de60e41ab0ccf87ad068';
+
     // constants
     TYPE_WEATHER = 'weather';
     TYPE_ONECALL = 'onecall';
 
-    units = UNITS_METRIC;
     metric = true;
+
+    REFRESH_DELAY = 60000;
+    refreshInterval = 0;
+
+    static userPositionIsSupplied = false;
 
     weatherData = {};
 
     constructor() {
         // trigger to load the weather once position data has been supplied by the user.
         addEvent('userPositionSupplied', event => this.weatherLoad(event.detail));
-        //addEvent('refreshWeatherData', event => this.weatherLoad())
+        qs('.metric-imperial').addEventListener('click', this.toggleMetric);
+    }
+
+    // toggleMetric: toggle between metric and imperial units of measurement.
+    toggleMetric = () => {
+        this.metric = !this.metric;
+        this.weatherLoad(WeatherLocation.location);
+        setHTML('.metric-imperial', this.metric? 'Metric' : 'Imperial'); 
     }
 
     weatherLoad = async (data) => {
         this.loading = true;
 
-        console.log('In Weather class ' + data.latitude + ' ' + data.longitude);
-        await this.fetchData(data.latitude, data.longitude);
-        console.log('Promises resolved!', this.weatherData);
+        //console.log('In Weather class ' + data.latitude + ' ' + data.longitude);
+        try {
+            await this.fetchData(data.latitude, data.longitude);
+        } catch(e) {
+            alert('Couldn\'t fetch updated weather data. Are you connected to the internet?');
+            return false;
+        }
+        //console.log('Promises resolved!', this.weatherData);
 
+        // populate header.
         this.showHeader = true;
         this.populate('header');
 
         this.showCards = true;
+
         // populate each card.
         this.populate('temps');
         this.populate('feelsLike');
@@ -58,6 +69,11 @@ class Weather {
 
         WeatherLocation.showLocPopup = false;
         this.loading = false;
+
+        Weather.userPositionIsSupplied = true;
+
+        // set the interval to refresh the weather data periodically.
+        if (!this.refreshInterval) this.refreshInterval = setInterval(this.weatherRefresh, this.REFRESH_DELAY);
     }
 
     // fetchData: fetch both JSON files asynchronously, and then return a promise when both have been retrieved.
@@ -71,9 +87,6 @@ class Weather {
         .then(data => this.weatherData.onecall = data);
 
         await Promise.all([promise1, promise2]);
-        //.then(() => {
-            //console.log(this.weatherData);
-        //});
     }
 
     // populate: populate the cards.
@@ -98,6 +111,7 @@ class Weather {
                 ];
 
                 setHTML('.weather-temps', weatherHTML.join('<br/>'));
+                qs('.card-temps').style.backgroundImage = 'linear-gradient(to bottom right, #fff, hsl('+temps.hue+', 50%, 50%))';
             break;
 
             case 'feelsLike': 
@@ -105,13 +119,17 @@ class Weather {
                 const fl = WeatherFunctions.getFeelsLike(key, this.metric);
 
                 setHTML('.weather-temp-feels-like', fl.t + ' ' + fl.emoji);
+                qs('.card-temp-feels-like').style.backgroundImage = 'linear-gradient(to bottom right, #fff, hsl('+fl.hue+', 50%, 50%))';
             break;
 
             case 'clouds':
                 key = this.weatherData.weather.clouds.all;
                 const clouds = WeatherFunctions.getClouds(key);
                 
-                setHTML('.weather-clouds', clouds.cloudCover + ' ' + clouds.emoji);
+                setHTML('.weather-clouds', clouds.cloudCover + '% ' + clouds.emoji);
+
+                const clearGradient = clouds.cloudCover < 95? clouds.cloudCover + 5 : 100;
+                qs('.card-clouds').style.backgroundImage = 'linear-gradient(to bottom, #ccc ' + clouds.cloudCover + '%, hsl(195, 59%, 77%) ' + clearGradient + '%)';
             break;
 
             case 'uvi':
@@ -119,6 +137,7 @@ class Weather {
                 const uvi = WeatherFunctions.getUVI(key);
 
                 setHTML('.weather-uvi', uvi.uvi + ' ' + uvi.emoji);
+                qs('.card-uvi').style.backgroundImage = 'linear-gradient(to bottom right, #fff, hsl(' + uvi.hue + ', 50%, 50%)';
             break;
 
             case 'wind':
@@ -219,9 +238,13 @@ class Weather {
         }
     }
 
+    // weatherRefresh: Refresh weather data periodically. This must be called by an interval function.
+    weatherRefresh = () => {
+        if (Weather.userPositionIsSupplied) this.weatherLoad(WeatherLocation.location);
+    }
 
     // format a url based on the type of request 
-    formatURL = (type, latitude, longitude) => 'https://api.openweathermap.org/data/2.5/'+type+'?lat=' + latitude + '&lon=' + longitude + '&APPID=' + WEATHERKEY;
+    formatURL = (type, latitude, longitude) => 'https://api.openweathermap.org/data/2.5/'+type+'?lat=' + latitude + '&lon=' + longitude + '&APPID=' + this.WEATHERKEY;
 
 
     // display functions

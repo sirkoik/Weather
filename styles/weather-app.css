@@ -34,6 +34,10 @@ body {
     font-size: 2vmax;
 }
 
+.header button {
+    font-size: 2vmax;
+}
+
 .footer {
     font-size: clamp(2rem, 4vw, 3rem);
 }

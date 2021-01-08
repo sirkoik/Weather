@@ -5,7 +5,39 @@ Weather uses two APIs: OpenWeatherMap and LocationIQ.
 
 OpenWeatherMap is used to get weather-related information for a location, such as from Lat/Long coordinates provided by the user's device.
 
-LocationIQ is used to get Lat/Long coordinates from a user-provided location or address. This way, they can get information even if they don't want to disclose their exact location (iOS has a way of setting a less exact location).
+(note: this is not implemented yet) LocationIQ is used to get Lat/Long coordinates from a user-provided location or address. This way, they can get information even if they don't want to disclose their exact location (iOS has a way of setting a less exact location).
+
+## v0.1
+Major code refactoring.
+* Both JSON requests are fulfilled by a Promise.all()
+* C/F conversion is centrally handled
+* Weather functions are clearly separated
+* Event manager
+
+Implemented:
+* User-specified metric/imperial conversion
+* Dew point
+* Rain*
+* Snow*
+* Weather details (array from the weather property)
+* Some card backgrounds change colors based on information
+** Temperatures range from blue (cold) to red (hot).
+** UV is colored based on the EPA's UV scale.
+** Cloud cover is shaded based on cloud cover percentage.
+
+*Untested, API is not the most clear on property name details.
+
+Bugfixes:
+* Wind speed is now in km/h instead of m/s
+* Errors are now handled for failing to retrieve location data and JSON feeds.
+
+Need to re-implement:
+* Day / night theme
+
+Will implement:
+* Manually user-supplied location
+* Remember user's choice about sharing location (old version just requested it regardless)
+
 
 ## v0.0.13
 Some display tweaks.

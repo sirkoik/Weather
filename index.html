@@ -19,7 +19,7 @@
             <!-- header -->
             <div class="header hide">
                 <div>
-                    Weather for <span class="location-name">(loading place...)</span>
+                    <button class="metric-imperial">Metric</button> weather for <button class="location-name" id="change-location">(loading place...)</button>
                 </div>    
             
                 <div>
@@ -29,23 +29,26 @@
             
             <!-- cards -->
             <div class="cards hide">
-                <div class="card">
+                <div class="card card-temps">
                     <div>
                         <p>Temperature</p>
                         <div class="weather-temps"></div>
                     </div>
                 </div>
             
-                <div class="card">
+                <div class="card card-temp-feels-like">
                     <div><p>Feels Like</p><span class="larger weather-temp-feels-like"></span></div>
                 </div>
             
-                <div class="card">
-                    <div><p>Clouds</p><span class="larger weather-clouds"></span></div>
+                <div class="card card-clouds">
+                    <div><p>Cloud cover</p><span class="larger weather-clouds"></span></div>
                 </div>
             
-                <div class="card">
-                    <div><p>UV index<sup><a href="https://www.weather.gov/ilx/uv-index" target="_blank" class="weather-uvi-link">[1]</a></sup></p><span class="larger weather-uvi"></span></div>
+                <div class="card card-uvi">
+                    <div>
+                        <p>UV index<sup><a href="https://www.weather.gov/ilx/uv-index" target="_blank" class="weather-uvi-link">[1]</a></sup></p>
+                        <span class="larger weather-uvi"></span>
+                    </div>
                 </div>
                 
                 <div class="card">
@@ -112,22 +115,6 @@
             
             <div id="footer-info" class="footer hide">
                 <p>More info</p>
-            
-                <div>
-                    <p>Todo</p>
-            
-                    <p>Humidity: Water drop background that gets more dense with higher numbers.</p>
-            
-                    <p>Make clouds (and other panes) "simple information" which can be tapped to reveal more complex information.</p>
-            
-                    <p>5/17 made this grid layout responsive.</p>
-                    <p>12/31 major visual overhaul.</p>
-                </div>
-            
-                <div>Version: <span class="version"></span> (grid layout)</div>
-                <div>Refreshes every <span class="refresh"></span> seconds.</div>
-                <div>Data last updated <span class="weather-last-updated">...</span></div>
-                <div>Data feed refreshes every <span class="data-refresh"></span> minutes.</div>
                 <div>Temperature may be the average of multiple samples in the area.</div>
                 <div><a href="./old/index.html">Old version</a></div>
             </div>

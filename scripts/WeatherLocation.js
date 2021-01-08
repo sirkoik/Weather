@@ -1,21 +1,29 @@
 import { qs, hide, unhide } from './utility.js';
 import { addEvent, target } from './Events.js';
+import Weather from './Weather.js';
 
 class WeatherLocation {
     // default location data
-    locData = {
+    static locData = {
         latitude: 51.5, 
         longitude: 0.128,
         place: 'London'
     };
 
-    constructor() {
+    static get location() {
+        return this.locData;
+    }
 
+    constructor() {
+        qs('#change-location').addEventListener('click', this.locPopup);
     }
 
     // Get location data on load.
+    // note that navigator.permissions, which could be used to autodetect 
+    // permissions, is not supported in iOS Safari.
     getFirst = () => {
         if (1 == 2) {
+            //const stored = 
             // autoload card.
             // right now, it always shows the location popup information.
         } else {
@@ -27,6 +35,7 @@ class WeatherLocation {
     locPopup = () => {
         unhide('#weather-app');
         unhide('.popup-container');
+        Weather.userPositionIsSupplied = false;
 
         if (qs('#location-autodetect').getAttribute('click-listener') !== 'true') {
             qs('#location-autodetect').addEventListener('click', this.browserLocationDetect);
@@ -47,11 +56,11 @@ class WeatherLocation {
             );
         })
         .then(position => {
-            this.locData.latitude = position.coords.latitude;
-            this.locData.longitude = position.coords.longitude;
+            WeatherLocation.locData.latitude = position.coords.latitude;
+            WeatherLocation.locData.longitude = position.coords.longitude;
             
             // dispatch an event to Weather indicating that user position data is available.
-            target.dispatchEvent(new CustomEvent('userPositionSupplied', {detail: this.locData}));
+            target.dispatchEvent(new CustomEvent('userPositionSupplied', {detail: WeatherLocation.location}));
         })
         .catch(error => {
             const errorType = Object.prototype.toString.apply(error);
