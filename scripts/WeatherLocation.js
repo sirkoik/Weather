@@ -37,8 +37,8 @@ const locPopup = () => {
 
 // try to autodetect location, and handle user decline or other error.
 const browserLocationDetect = () => {
-    target.dispatchEvent(new CustomEvent('userPositionSupplied', {detail: location}));
-    return false;
+    //target.dispatchEvent(new CustomEvent('userPositionSupplied', {detail: location}));
+    //return false;
 
     const getCoords = new Promise(
     (resolve, reject) => {
@@ -57,7 +57,7 @@ const browserLocationDetect = () => {
         // dispatch an event to Weather indicating that user position data is available.
         target.dispatchEvent(new CustomEvent('userPositionSupplied', {detail: location}));
     })
-    .catch(error => {
+    .catch(error => {alert(error.message);
         const errorType = Object.prototype.toString.apply(error);
         if (errorType === '[object GeolocationPositionError]' && error.code === 1) {
             alert(
