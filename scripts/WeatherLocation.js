@@ -37,6 +37,9 @@ const locPopup = () => {
 
 // try to autodetect location, and handle user decline or other error.
 const browserLocationDetect = () => {
+    target.dispatchEvent(new CustomEvent('userPositionSupplied', {detail: location}));
+    return false;
+
     const getCoords = new Promise(
     (resolve, reject) => {
         navigator.geolocation.getCurrentPosition(
