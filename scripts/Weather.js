@@ -1,315 +1,267 @@
-import WeatherLocation from './WeatherLocation.js';
-import WeatherFunctions from './WeatherFunctions.js';
-import {addEvent} from './Events.js';
+import { location, getFirst, showLocPopup } from './WeatherLocation.js';
+import { 
+    getTemps, 
+    getFeelsLike, 
+    getUVI, 
+    getClouds, 
+    getWind, 
+    getHumidityDewPoint, 
+    getPressure, 
+    getVisibility, 
+    getRain, 
+    getSnow, 
+    getWeatherTypes, 
+    getSun 
+} from './WeatherFunctions.js';
+import {addEvent, state} from './Events.js';
 import {qs, hide, unhide, setHTML} from './utility.js';
 
-class Weather {
-    // API key
-    WEATHERKEY = '6b80ba80e350de60e41ab0ccf87ad068';
+// API key
+const WEATHERKEY = '6b80ba80e350de60e41ab0ccf87ad068';
 
-    // constants
-    TYPE_WEATHER = 'weather';
-    TYPE_ONECALL = 'onecall';
+// API constants
+const TYPE_WEATHER = 'weather';
+const TYPE_ONECALL = 'onecall';
 
-    metric = true;
+let metric = true;
 
-    REFRESH_DELAY = 60000;
-    refreshInterval = 0;
+const REFRESH_DELAY = 60000;
+let refreshInterval = 0;
 
-    static userPositionIsSupplied = false;
+const weatherData = {};
 
-    weatherData = {};
+state.userPositionIsSupplied = false;
 
-    constructor() {
-        // trigger to load the weather once position data has been supplied by the user.
-        addEvent('userPositionSupplied', event => this.weatherLoad(event.detail));
-        qs('.metric-imperial').addEventListener('click', this.toggleMetric);
+
+// toggleMetric: toggle between metric and imperial units of measurement.
+const toggleMetric = () => {
+    metric = !metric;
+    weatherLoad(location);
+    setHTML('.metric-imperial', metric? 'Metric' : 'Imperial'); 
+}
+
+const weatherLoad = async (data) => {
+    //alert('browser location detect -> weather load?');
+    unhide('.loading-container');
+
+    //console.log('In Weather class ' + data.latitude + ' ' + data.longitude);
+    try {
+        await fetchData(data.latitude, data.longitude);
+    } catch(e) {
+        alert('Couldn\'t fetch updated weather data. Are you connected to the internet?');
+        return false;
     }
+    //console.log('Promises resolved!', weatherData);
 
-    // toggleMetric: toggle between metric and imperial units of measurement.
-    toggleMetric = () => {
-        this.metric = !this.metric;
-        this.weatherLoad(WeatherLocation.location);
-        setHTML('.metric-imperial', this.metric? 'Metric' : 'Imperial'); 
-    }
+    // populate header.
+    unhide('.header');
+    populate('header');
 
-    weatherLoad = async (data) => {
-        this.loading = true;
+    unhide('.cards');
 
-        //console.log('In Weather class ' + data.latitude + ' ' + data.longitude);
-        try {
-            await this.fetchData(data.latitude, data.longitude);
-        } catch(e) {
-            alert('Couldn\'t fetch updated weather data. Are you connected to the internet?');
-            return false;
-        }
-        //console.log('Promises resolved!', this.weatherData);
+    // populate each card.
+    populate('temps');
+    populate('feelsLike');
+    populate('clouds');
+    populate('uvi');
+    populate('wind');
+    populate('humidity');
+    populate('pressure');
+    populate('visibility');
+    populate('rain');
+    populate('snow');
+    populate('sun');
+    populate('weatherTypes');
 
-        // populate header.
-        this.showHeader = true;
-        this.populate('header');
+    unhide('.footer');
 
-        this.showCards = true;
+    showLocPopup(false);
+    hide('.loading-container');
 
-        // populate each card.
-        this.populate('temps');
-        this.populate('feelsLike');
-        this.populate('clouds');
-        this.populate('uvi');
-        this.populate('wind');
-        this.populate('humidity');
-        this.populate('pressure');
-        this.populate('visibility');
-        this.populate('rain');
-        this.populate('snow');
-        this.populate('sun');
-        this.populate('weatherTypes');
+    state.userPositionIsSupplied = true;
 
-        this.showFooter = true;
+    // set the interval to refresh the weather data periodically.
+    if (!refreshInterval) refreshInterval = setInterval(weatherRefresh, REFRESH_DELAY);
+}
 
-        WeatherLocation.showLocPopup = false;
-        this.loading = false;
+// fetchData: fetch both JSON files asynchronously, and then return a promise when both have been retrieved.
+const fetchData = async (latitude, longitude) => {
+    const promise1 = fetch(formatURL(TYPE_WEATHER, latitude, longitude))
+    .then(data => data.json())
+    .then(data => weatherData.weather = data);
 
-        Weather.userPositionIsSupplied = true;
+    const promise2 = fetch(formatURL(TYPE_ONECALL, latitude, longitude))
+    .then(data => data.json())
+    .then(data => weatherData.onecall = data);
 
-        // set the interval to refresh the weather data periodically.
-        if (!this.refreshInterval) this.refreshInterval = setInterval(this.weatherRefresh, this.REFRESH_DELAY);
-    }
+    await Promise.all([promise1, promise2]);
+}
 
-    // fetchData: fetch both JSON files asynchronously, and then return a promise when both have been retrieved.
-    fetchData = async (latitude, longitude) => {
-        const promise1 = fetch(this.formatURL(this.TYPE_WEATHER, latitude, longitude))
-        .then(data => data.json())
-        .then(data => this.weatherData.weather = data);
+// populate: populate the cards.
+const populate = type => {
+    const weatherMain = weatherData.weather.main;
+    const oneCall = weatherData.onecall.current;
+    let key = '';
 
-        const promise2 = fetch(this.formatURL(this.TYPE_ONECALL, latitude, longitude))
-        .then(data => data.json())
-        .then(data => this.weatherData.onecall = data);
+    switch(type) {
+        case 'header':
+            key = weatherData.weather;
+            setHTML('.location-name', key.name);
+        break;
 
-        await Promise.all([promise1, promise2]);
-    }
+        case 'temps':
+            key = weatherMain;
+            const temps = getTemps(key.temp_min, key.temp, key.temp_max, metric);
+            const weatherHTML = [
+                'max <span class="larger">' + temps.max + '</span>',
+                'avg <span class="larger">' + temps.avg + '</span>',
+                'min <span class="larger">' + temps.min + '</span>'
+            ];
 
-    // populate: populate the cards.
-    populate = type => {
-        const weatherMain = this.weatherData.weather.main;
-        const oneCall = this.weatherData.onecall.current;
-        let key = '';
+            setHTML('.weather-temps', weatherHTML.join('<br/>'));
+            qs('.card-temps').style.backgroundImage = 'linear-gradient(to bottom right, #fff, hsl('+temps.hue+', 50%, 50%))';
+        break;
 
-        switch(type) {
-            case 'header':
-                key = this.weatherData.weather;
-                setHTML('.location-name', key.name);
-            break;
+        case 'feelsLike': 
+            key = oneCall.feels_like;
+            const fl = getFeelsLike(key, metric);
 
-            case 'temps':
-                key = weatherMain;
-                const temps = WeatherFunctions.getTemps(key.temp_min, key.temp, key.temp_max, this.metric);
-                const weatherHTML = [
-                    'max <span class="larger">' + temps.max + '</span>',
-                    'avg <span class="larger">' + temps.avg + '</span>',
-                    'min <span class="larger">' + temps.min + '</span>'
-                ];
+            setHTML('.weather-temp-feels-like', fl.t + ' ' + fl.emoji);
+            qs('.card-temp-feels-like').style.backgroundImage = 'linear-gradient(to bottom right, #fff, hsl('+fl.hue+', 50%, 50%))';
+        break;
 
-                setHTML('.weather-temps', weatherHTML.join('<br/>'));
-                qs('.card-temps').style.backgroundImage = 'linear-gradient(to bottom right, #fff, hsl('+temps.hue+', 50%, 50%))';
-            break;
+        case 'clouds':
+            key = weatherData.weather.clouds.all;
+            const clouds = getClouds(key);
+            
+            setHTML('.weather-clouds', clouds.cloudCover + '% ' + clouds.emoji);
 
-            case 'feelsLike': 
-                key = oneCall.feels_like;
-                const fl = WeatherFunctions.getFeelsLike(key, this.metric);
+            const clearGradient = clouds.cloudCover < 95? clouds.cloudCover + 5 : 100;
+            qs('.card-clouds').style.backgroundImage = 'linear-gradient(to bottom, #ccc ' + clouds.cloudCover + '%, hsl(195, 59%, 77%) ' + clearGradient + '%)';
+        break;
 
-                setHTML('.weather-temp-feels-like', fl.t + ' ' + fl.emoji);
-                qs('.card-temp-feels-like').style.backgroundImage = 'linear-gradient(to bottom right, #fff, hsl('+fl.hue+', 50%, 50%))';
-            break;
+        case 'uvi':
+            key = oneCall.uvi;
+            const uvi = getUVI(key);
 
-            case 'clouds':
-                key = this.weatherData.weather.clouds.all;
-                const clouds = WeatherFunctions.getClouds(key);
-                
-                setHTML('.weather-clouds', clouds.cloudCover + '% ' + clouds.emoji);
+            setHTML('.weather-uvi', uvi.uvi + ' ' + uvi.emoji);
+            qs('.card-uvi').style.backgroundImage = 'linear-gradient(to bottom right, #fff, hsl(' + uvi.hue + ', 50%, 50%)';
+        break;
 
-                const clearGradient = clouds.cloudCover < 95? clouds.cloudCover + 5 : 100;
-                qs('.card-clouds').style.backgroundImage = 'linear-gradient(to bottom, #ccc ' + clouds.cloudCover + '%, hsl(195, 59%, 77%) ' + clearGradient + '%)';
-            break;
+        case 'wind':
+            key = weatherData.weather.wind;
+            const wind = getWind(key, metric);
 
-            case 'uvi':
-                key = oneCall.uvi;
-                const uvi = WeatherFunctions.getUVI(key);
+            setHTML('.weather-wind', wind.speed);
 
-                setHTML('.weather-uvi', uvi.uvi + ' ' + uvi.emoji);
-                qs('.card-uvi').style.backgroundImage = 'linear-gradient(to bottom right, #fff, hsl(' + uvi.hue + ', 50%, 50%)';
-            break;
+            // if a wind angle is supplied, show the direction and an arrow.
+            if (wind.angle) {
+                unhide('.wind-direction');
 
-            case 'wind':
-                key = this.weatherData.weather.wind;
-                const wind = WeatherFunctions.getWind(key, this.metric);
+                setHTML('.wind-direction-text', wind.direction);
+                setHTML('.wind-angle', '&uarr;');
+                qs('.wind-angle').style.transform = 'rotate(' + wind.angle + 'deg)';
+            } else {
+                hide('.wind-direction');
+            }
 
-                setHTML('.weather-wind', wind.speed);
+            // if a wind gust is present, add to card.
+            if (wind.gust) {
+                setHTML('.wind-gust', wind.gustSpeed)
+                unhide('.weather-wind-gust-container');
+            } else {
+                hide('.weather-wind-gust-container');
+            }
+        break;
 
-                // if a wind angle is supplied, show the direction and an arrow.
-                if (wind.angle) {
-                    unhide('.wind-direction');
+        case 'humidity':
+            const humidity = getHumidityDewPoint(oneCall.humidity, oneCall.dew_point, metric);
 
-                    setHTML('.wind-direction-text', wind.direction);
-                    setHTML('.wind-angle', '&uarr;');
-                    qs('.wind-angle').style.transform = 'rotate(' + wind.angle + 'deg)';
-                } else {
-                    hide('.wind-direction');
-                }
+            setHTML('.weather-humidity', humidity.humidity + ' ' + humidity.emoji);
+            setHTML('.weather-dewpoint', humidity.dewPoint);
+        break;
 
-                // if a wind gust is present, add to card.
-                if (wind.gust) {
-                    setHTML('.wind-gust', wind.gustSpeed)
-                    unhide('.weather-wind-gust-container');
-                } else {
-                    hide('.weather-wind-gust-container');
-                }
-            break;
+        case 'pressure':
+            key = oneCall.pressure;
+            const pressure = getPressure(key, metric);
 
-            case 'humidity':
-                const humidity = WeatherFunctions.getHumidityDewPoint(oneCall.humidity, oneCall.dew_point, this.metric);
+            setHTML('.weather-pressure', pressure.pressure);
+        break;
 
-                setHTML('.weather-humidity', humidity.humidity + ' ' + humidity.emoji);
-                setHTML('.weather-dewpoint', humidity.dewPoint);
-            break;
+        case 'visibility':
+            key = weatherData.weather.visibility;
+            const visibility = getVisibility(key, metric);
 
-            case 'pressure':
-                key = oneCall.pressure;
-                const pressure = WeatherFunctions.getPressure(key, this.metric);
+            setHTML('.weather-visibility', visibility);
+        break;
 
-                setHTML('.weather-pressure', pressure.pressure);
-            break;
+        case 'weatherTypes': 
+            key = oneCall.weather;
+            const types = getWeatherTypes(key);
 
-            case 'visibility':
-                key = this.weatherData.weather.visibility;
-                const visibility = WeatherFunctions.getVisibility(key, this.metric);
+            if (types.length > 0) {
+                setHTML('.weather-types', types.join('\n'));
+                unhide('.weather-types-container');
+            } else {
+                hide('.weather-types-container');
+            }
+        break;
 
-                setHTML('.weather-visibility', visibility);
-            break;
+        case 'rain':
+            key = weatherMain.rain;
+            if (!key) {
+                hide('.weather-rain-container');
+                break;
+            }
+            
+            const rain = getRain(key);
+            setHTML('.weather-rain', rain);
+            unhide('.weather-rain-container');
+        break;
 
-            case 'weatherTypes': 
-                key = oneCall.weather;
-                const types = WeatherFunctions.getWeatherTypes(key);
+        case 'snow':
+            key = weatherMain.snow;
+            if (!key) {
+                hide('.weather-snow-container');
+                break;
+            }
+            
+            const snow = getSnow(key);
+            setHTML('.weather-snow', snow);
+            unhide('.weather-snow-container');
+        break;            
 
-                if (types.length > 0) {
-                    setHTML('.weather-types', types.join('\n'));
-                    unhide('.weather-types-container');
-                } else {
-                    hide('.weather-types-container');
-                }
-            break;
+        case 'sun':
+            key = weatherData.weather.sys;
+            const sun = getSun(key);
+            const sunHTML = [
+                '🌞 ' + sun.sunrise,
+                '🌛 ' + sun.sunset,
+                '🌞 ' + sun.daylightHrs + 'h / ' + sun.daylight + '%',
+                '🌛 ' + sun.nightHrs + 'h / ' + sun.night + '%'
+            ];
 
-            case 'rain':
-                key = weatherMain.rain;
-                if (!key) {
-                    hide('.weather-rain-container');
-                    break;
-                }
-                
-                const rain = WeatherFunctions.getRain(key);
-                setHTML('.weather-rain', rain);
-                unhide('.weather-rain-container');
-            break;
-
-            case 'snow':
-                key = weatherMain.snow;
-                if (!key) {
-                    hide('.weather-snow-container');
-                    break;
-                }
-                
-                const snow = WeatherFunctions.getRain(key);
-                setHTML('.weather-snow', snow);
-                unhide('.weather-snow-container');
-            break;            
-
-            case 'sun':
-                key = this.weatherData.weather.sys;
-                const sun = WeatherFunctions.getSun(key);
-                const sunHTML = [
-                    '🌞 ' + sun.sunrise,
-                    '🌛 ' + sun.sunset,
-                    '🌞 ' + sun.daylightHrs + 'h / ' + sun.daylight + '%',
-                    '🌛 ' + sun.nightHrs + 'h / ' + sun.night + '%'
-                ];
-
-                setHTML('.weather-sun', sunHTML.join('<br/>'));
-            break;
-        }
-    }
-
-    // weatherRefresh: Refresh weather data periodically. This must be called by an interval function.
-    weatherRefresh = () => {
-        if (Weather.userPositionIsSupplied) this.weatherLoad(WeatherLocation.location);
-    }
-
-    // format a url based on the type of request 
-    formatURL = (type, latitude, longitude) => 'https://api.openweathermap.org/data/2.5/'+type+'?lat=' + latitude + '&lon=' + longitude + '&APPID=' + this.WEATHERKEY;
-
-
-    // display functions
-    set showHeader(show) {
-        if (show) {
-            unhide('.header');
-        } else {
-            hide('.header');
-        }
-    }    
-
-    set showCards(show) {
-        if (show) {
-            unhide('.cards');
-        } else {
-            hide('.cards');
-        }
-    }
-
-    set showFooter(show) {
-        if (show) {
-            unhide('.footer');
-        } else {
-            hide('.footer');
-        }
-    }    
-
-    set loading(isLoading) {
-        if (isLoading) {
-            unhide('.loading-container');
-        } else {
-            hide('.loading-container');
-        }
+            setHTML('.weather-sun', sunHTML.join('<br/>'));
+        break;
     }
 }
 
-
-function WeatherOld() {  
-    // Weather.checkNight: check if nighttime and if so, invert colors
-    this.checkNight = data => {
-        var curDate = new Date().getTime();
-        
-        data = JSON.parse(data);
-        let sunrise = data.sys.sunrise * 1000;
-        let sunset = data.sys.sunset * 1000;
-        
-        let isDay = curDate > sunrise && curDate < sunset;
-        
-        // nighttime
-        if (!isDay)  {
-            document.querySelector('*').style.color = '#fff';
-            document.body.style.backgroundColor = '#000';
-        } else {
-            //alert(curDate + ' ' +  data.sys.sunrise*1000);
-        }
-    }
-    
-    
-    // delayedRefresh: Refreshes data after a delay.
-    this.delayedRefresh = () => {
-        refreshTimeout = setTimeout(() => {
-            //this.getData();
-            this.getCoords();
-        }, REFRESHDELAY);
-    }
+// weatherRefresh: Refresh weather data periodically. This must be called by an interval function.
+const weatherRefresh = () => {
+    if (state.userPositionIsSupplied) weatherLoad(location);
 }
 
-export default Weather;
+// format a url based on the type of request 
+const formatURL = (type, latitude, longitude) => 'https://api.openweathermap.org/data/2.5/'+type+'?lat=' + latitude + '&lon=' + longitude + '&APPID=' + WEATHERKEY;
+
+/*
+// Check if daytime
+// Weather.checkNight: check if nighttime and if so, invert colors
+const sunrise = data.sys.sunrise * 1000;
+const sunset = data.sys.sunset * 1000;
+const isDay = curDate > sunrise && curDate < sunset;
+*/
+
+// trigger to load the weather once position data has been supplied by the user.
+addEvent('userPositionSupplied', event => weatherLoad(event.detail));
+qs('.metric-imperial').addEventListener('click', toggleMetric);

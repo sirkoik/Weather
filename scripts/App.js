@@ -1,11 +1,8 @@
-import Weather from './Weather.js';
-import WeatherLocation from './WeatherLocation.js';
+import * as Weather from './Weather.js';
+import { getFirst } from './WeatherLocation.js';
 
 const run = () => {
-    const weather = new Weather();
-    const weatherLoc = new WeatherLocation();
-
-    weatherLoc.getFirst();
+    getFirst();
 }
 
 run();
