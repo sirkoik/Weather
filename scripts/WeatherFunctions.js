@@ -60,7 +60,7 @@ const getTemp = (tempKelvin, metric) => {
     tc = Math.round(tc * 10) / 10;
     tf = Math.round(tf * 10) / 10;
 
-    return metric? tc + 'C' : tf + 'F';
+    return metric? tc + '&deg;C' : tf + '&deg;F';
 }
 
 // getTempHue: get a color hue for a temperature (260K = very cold, 320K = very hot)

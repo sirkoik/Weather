@@ -1,4 +1,4 @@
-import { qs, hide, unhide, setHTML } from './utility.js';
+import { qs, hide, unhide, setHTML, setAttr, removeAttr } from './utility.js';
 import { addEvent, target, state } from './Events.js';
 
 // default location data
@@ -128,8 +128,12 @@ let keyTimeout = 0;
 let places = [];
 let selectedPlace = 0;
 const getManualLocation = event => {
+    setAttr('#location-manual-submit', 'disabled', 'true');
     const text = event.target.value;
-    if (text.length < 3) return false;
+    if (text.length < 3) {
+        setHTML('.places-list', '');
+        return false;
+    }
 
     clearTimeout(keyTimeout);
     keyTimeout = setTimeout(() => {
@@ -138,7 +142,7 @@ const getManualLocation = event => {
         .then(data => {
             setHTML('.places-list', '');
             places = data.map((v, i) => {
-                const el = document.createElement('div');
+                const el = document.createElement('button');
                 el.innerHTML = v.display_name;
                 el.setAttribute("placeindex", i);
                 qs('.places-list').appendChild(el);
@@ -161,6 +165,7 @@ const populateLocationBox = event => {
 
     const place = places[index];
     qs('#location-manual').value = place.name;
+    removeAttr('#location-manual-submit', 'disabled');
 }
 
 const manualLocationIsValid = () => {

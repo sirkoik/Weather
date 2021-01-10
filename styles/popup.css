@@ -29,3 +29,12 @@
 .popup-container .popup * {
     font-size: 2vmax;
 }
+
+.places-list {
+    max-height: 7vmax;
+    overflow-y: scroll;
+}
+
+.places-list button {
+    width: 100%;
+}
