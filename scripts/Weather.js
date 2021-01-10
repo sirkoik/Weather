@@ -1,4 +1,4 @@
-import { location, getFirst, showLocPopup } from './WeatherLocation.js';
+import { location, showLocPopup } from './WeatherLocation.js';
 import { 
     getTemps, 
     getFeelsLike, 
@@ -13,7 +13,7 @@ import {
     getWeatherTypes, 
     getSun 
 } from './WeatherFunctions.js';
-import {addEvent, state} from './Events.js';
+import {addEvent, getState, setState} from './Events.js';
 import {qs, hide, unhide, setHTML} from './utility.js';
 import {round2} from './utility.js';
 
@@ -24,25 +24,26 @@ const WEATHERKEY = '6b80ba80e350de60e41ab0ccf87ad068';
 const TYPE_WEATHER = 'weather';
 const TYPE_ONECALL = 'onecall';
 
-let metric = true;
+let metric = getState('metric') || true;
 
 const REFRESH_DELAY = 60000;
 let refreshInterval = 0;
 
 const weatherData = {};
 
-state.userPositionIsSupplied = false;
+setState('userPositionIsSupplied', false);
 
 
 // toggleMetric: toggle between metric and imperial units of measurement.
 const toggleMetric = () => {
     metric = !metric;
+    setState('metric', metric);
     weatherLoad(location);
     setHTML('.metric-imperial', metric? 'Metric' : 'Imperial'); 
 }
 
+// weatherLoad: Fetch JSON data and then populate fields with weather information.
 const weatherLoad = async (data) => {
-    //alert('browser location detect -> weather load?');
     unhide('.loading-container');
 
     //console.log('In Weather class ' + data.latitude + ' ' + data.longitude);
@@ -52,11 +53,16 @@ const weatherLoad = async (data) => {
         alert('Couldn\'t fetch updated weather data. Are you connected to the internet?');
         return false;
     }
-    //console.log('Promises resolved!', weatherData);
+
+    // load metric / imperial data.
+    metric = getState('metric');
 
     // populate header.
     unhide('.header');
     populate('header');
+
+    // populate default or saved metric information.
+    populate('metric');
 
     unhide('.cards');
 
@@ -79,7 +85,7 @@ const weatherLoad = async (data) => {
     showLocPopup(false);
     hide('.loading-container');
 
-    state.userPositionIsSupplied = true;
+    setState('userPositionIsSupplied', true);
 
     // set the interval to refresh the weather data periodically.
     if (!refreshInterval) refreshInterval = setInterval(weatherRefresh, REFRESH_DELAY);
@@ -113,6 +119,11 @@ const populate = type => {
             if (!weatherData.weather.name) key = round2(location.latitude, 2) + ', ' + round2(location.longitude, 2)
 
             setHTML('.location-name', key);
+        break;
+
+        case 'metric':
+            key = getState('metric');//alert(key);
+            setHTML('.metric-imperial', key? 'Metric' : 'Imperial');
         break;
 
         case 'temps':
@@ -254,7 +265,7 @@ const populate = type => {
 
 // weatherRefresh: Refresh weather data periodically. This must be called by an interval function.
 const weatherRefresh = () => {
-    if (state.userPositionIsSupplied) weatherLoad(location);
+    if (getState('userPositionIsSupplied')) weatherLoad(location);
 }
 
 // format a url based on the type of request 

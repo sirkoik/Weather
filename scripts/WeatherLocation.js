@@ -1,8 +1,8 @@
 import { qs, hide, unhide, setHTML, setAttr, removeAttr } from './utility.js';
-import { addEvent, target, state } from './Events.js';
+import { target, getState, setState } from './Events.js';
 
 // default location data
-const location = {
+let location = {
     latitude: 51.5, 
     longitude: 0.128,
     place: 'London',
@@ -17,10 +17,17 @@ const liq = 'pk.5d8de80cc656acc11d9f866852d7642f';
 // note that navigator.permissions, which could be used to autodetect 
 // permissions, is not supported in iOS Safari.
 const getFirst = () => {
-    if (1 == 2) {
-        //const stored = 
-        // autoload card.
-        // right now, it always shows the location popup information.
+    let savedLocation = getState('location');
+    const persistedState = getState('persist');
+    if (!persistedState) {
+        setState('location', location);
+        savedLocation = false;
+    }
+
+    if (savedLocation) {
+        location = savedLocation;
+        target.dispatchEvent(new CustomEvent('userPositionSupplied', {detail: savedLocation}));
+        unhide('#weather-app');
     } else {
         locPopup();
     }
@@ -30,9 +37,7 @@ const getFirst = () => {
 const locPopup = () => {
     unhide('#weather-app');
     unhide('.popup-container');
-    state.userPositionIsSupplied = false;
-
-    console.log(qs('#location-autodetect'));
+    setState('userPositionIsSupplied', false);
 
     if (qs('#location-autodetect').getAttribute('click-listener') !== 'true') {
         qs('#location-autodetect').addEventListener('click', browserLocationDetect);
@@ -71,6 +76,9 @@ const browserLocationDetect = () => {
 
         location.place = '';
         
+        // set state persistence.
+        setState('persist', qs('#location-remember-choice').checked);
+
         // get more detailed place info from LocationIQ.
         getPlaceInfo();
 
@@ -178,6 +186,8 @@ const setManualLocation = () => {
     location.place = place.name;
     location.latitude = place.latitude;
     location.longitude = place.longitude;
+
+    setState('location', location);
 
     target.dispatchEvent(new CustomEvent('userPositionSupplied', {detail: location}));
 }
