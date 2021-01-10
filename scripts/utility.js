@@ -14,4 +14,11 @@ const setHTML = (query, html) => {
     document.querySelector(query).innerHTML = html;
 }
 
-export {qs, hide, unhide, setHTML};
+const round2 = (num, places) => {
+    if (!places) return Math.round(num);
+
+    return Math.round(num * 10 * places) / (10 * places);
+}
+
+export { qs, hide, unhide, setHTML };
+export { round2 };

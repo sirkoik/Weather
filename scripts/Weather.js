@@ -15,6 +15,7 @@ import {
 } from './WeatherFunctions.js';
 import {addEvent, state} from './Events.js';
 import {qs, hide, unhide, setHTML} from './utility.js';
+import {round2} from './utility.js';
 
 // API key
 const WEATHERKEY = '6b80ba80e350de60e41ab0ccf87ad068';
@@ -105,8 +106,13 @@ const populate = type => {
 
     switch(type) {
         case 'header':
-            key = weatherData.weather;
-            setHTML('.location-name', key.name);
+            // set the key to the location retrieved from LocationIQ, if possible
+            key = location.place !== ''? location.place : weatherData.weather.name;
+
+            // if place name is not available, show lat/long coordinates
+            if (!weatherData.weather.name) key = round2(location.latitude, 2) + ', ' + round2(location.longitude, 2)
+
+            setHTML('.location-name', key);
         break;
 
         case 'temps':

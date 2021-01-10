@@ -75,10 +75,12 @@ const getTempHue = tempKelvin => {
     return h;
 }
 
+// getClouds: get cloud cover in % and the emoji
 const getClouds = cloudCover => {
     const cloudEmojis = ['☁', '🌥', '⛅', '🌤', '☀'];
     let cEIndex = 5 - Math.round(cloudCover * 0.05);
     if (cEIndex < 0) cEIndex = 0;
+    if (cEIndex >= 4) cEIndex = 4;
     const cloudEmoji = cloudEmojis[cEIndex];
 
     return {cloudCover: cloudCover, emoji: cloudEmoji};

@@ -131,7 +131,11 @@
                     <h1>Want to get the latest weather?</h1>
                     <p>You can either let me auto-detect your location, or enter a location manually.</p>
                     <p><button id="location-autodetect">Get my location</button></p>
-                    <p>Enter manually: <input type="text" id="manual-location" value="Not enabled yet" disabled><button disabled>Go</button></p>
+                    <p>Enter manually: <input type="text" id="location-manual">
+                        <button id="location-manual-submit">Go</button>
+                        <div class="places-list"></div>
+                    </p>
+                    <p><label for="location-remember-choice"><input type="checkbox" name="location-remember-choice" id="location-remember-choice">Remember choice</label></p>
                     <p>Valid manual entries include city names, town names and zip codes. You can also enter lat/long coordinates if you want.</p>
                 </div>
             </div>
