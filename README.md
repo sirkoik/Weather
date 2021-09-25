@@ -1,11 +1,31 @@
 # Weather
 
+A weather app. Shows the following data pulled from the OpenWeatherMap API: 
+* Temperature averages
+* FeelsLike temperature
+* Cloud cover
+* UV index
+* Wind (speed, direction, and wind gusts)
+* Pressure
+* Humidity and dew point
+* Visibility
+* Weather categories (overcast, rain, extreme weather, etc.)
+* Rain
+* Snow
+* Sunrise / Sunset and hours/percentage of day/night
+
+The location can be auto-detected or manually entered. Locations retrieved from the LocationIQ API are used in the autocomplete field.
+
 ## Structure
-Weather uses two APIs: OpenWeatherMap and LocationIQ.
+This is the Basic JavaScript version of the Weather app. It uses JavaScript modules. The app is separated into the following modules:
+* App - the main app runner
+* Events - event handler and state manager
+* Weather - Functions related to the display of the app and rendering of the cards, as well as retrieving weather data from the API
+* WeatherFunctions - Functions for handling different numerical quantities supplied by the weather API
+* WeatherLocation - Functions related to retrieving user location and passing it to the weather app
+* utility - Utility functions
 
-OpenWeatherMap is used to get weather-related information for a location, such as from Lat/Long coordinates provided by the user's device.
-
-(note: this is not implemented yet) LocationIQ is used to get Lat/Long coordinates from a user-provided location or address. This way, they can get information even if they don't want to disclose their exact location (iOS has a way of setting a less exact location).
+I will be writing a version in React soon, which will have more features, such as saved places and a multi-day forecast.
 
 ## v0.1
 Major code refactoring.
@@ -15,6 +35,7 @@ Major code refactoring.
 * Event manager
 
 Implemented:
+* User-specified location
 * User-specified metric/imperial conversion
 * Dew point
 * Rain*
@@ -35,9 +56,11 @@ Need to re-implement:
 * Day / night theme
 
 Will implement:
-* Manually user-supplied location
-* Remember user's choice about sharing location (old version just requested it regardless)
-
+* Manually user-supplied location - done
+* Remember user's choice about sharing location (old version just requested it regardless) - done
+* Automatically updating location if user requests
+* Multi-day forecast (maybe in React version?)
+* Saved cities / places / addresses (maybe in React version?)
 
 ## v0.0.13
 Some display tweaks.
